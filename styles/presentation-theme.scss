@@ -452,6 +452,17 @@ $presentation-heading-font-weight: 600;
   opacity: 0.4;
 }
 
+// ── Goodness-of-fit grids ───────────────────────────────────────
+// Portrait GoF SVGs (612×792 pt) blow past slide height when only one or two
+// panels share a row at full column width — cap height and center horizontally.
+.reveal .gof-grid-compact figure img {
+  max-height: 48vh;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
 // ── Figure zoom modal (click-to-enlarge) ────────────────────────
 .reveal figure img {
   cursor: pointer;

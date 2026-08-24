@@ -124,7 +124,7 @@ gof_src <- function(content_area, grade, year, norm = "cohort") {
 
 ## One <figure> (works with the theme figure-modal lightbox: `.reveal figure img`)
 gof_figure <- function(content_area, grade, year, norm = "cohort",
-                       caption = NULL, alt = NULL) {
+                       caption = NULL, alt = NULL, max_height = NULL) {
   src <- gof_src(content_area, grade, year, norm)
   if (!file.exists(src)) {
     return(sprintf('<div style="padding:1em;color:#c0392b;font-size:0.6em">missing: %s</div>', src))
@@ -133,11 +133,16 @@ gof_figure <- function(content_area, grade, year, norm = "cohort",
                                            pretty_subject(content_area), grade,
                                            pretty_year(year), norm)
   if (is.null(alt)) alt <- gsub("&mdash;", "-", caption)
+  img_style <- if (!is.null(max_height)) {
+    sprintf("max-height:%s;width:auto;max-width:100%%;display:block;margin:0 auto", max_height)
+  } else {
+    "width:100%;height:auto"
+  }
   sprintf(
     '<figure style="margin:0;text-align:center">
-       <img src="%s" alt="%s" style="width:100%%;height:auto"/>
+       <img src="%s" alt="%s" style="%s"/>
        <figcaption>%s</figcaption>
-     </figure>', src, alt, caption)
+     </figure>', src, alt, img_style, caption)
 }
 
 ## Emit raw HTML as a pandoc passthrough block so `native_divs` does not try to
@@ -146,10 +151,11 @@ gof_figure <- function(content_area, grade, year, norm = "cohort",
 emit_html <- function(x) cat("\n```{=html}\n", x, "\n```\n", sep = "")
 
 ## Responsive grid of GoF figures
-gof_grid <- function(figs, min_col = "300px", gap = "0.6em") {
+gof_grid <- function(figs, min_col = "300px", gap = "0.6em", class = NULL) {
+  class_attr <- if (!is.null(class)) sprintf(' class="%s"', class) else ""
   emit_html(sprintf(
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(%s,1fr));gap:%s;align-items:start">%s</div>',
-    min_col, gap, paste(figs, collapse = "")))
+    '<div%s style="display:grid;grid-template-columns:repeat(auto-fit,minmax(%s,1fr));gap:%s;align-items:start">%s</div>',
+    class_attr, min_col, gap, paste(figs, collapse = "")))
 }
 ```
 
@@ -413,9 +419,11 @@ gof_grid(vapply(c("4","5","6","7","8"),
 ```{r gof-sat-cohort}
 #| output: asis
 gof_grid(c(
-  gof_figure("ELA_SAT", "EOCT", AY, "cohort", caption = "ELA &mdash; SAT (grade 11)"),
-  gof_figure("MATHEMATICS_SAT", "EOCT", AY, "cohort", caption = "Mathematics &mdash; SAT (grade 11)")
-), min_col = "420px")
+  gof_figure("ELA_SAT", "EOCT", AY, "cohort",
+             caption = "ELA &mdash; SAT (grade 11)", max_height = "48vh"),
+  gof_figure("MATHEMATICS_SAT", "EOCT", AY, "cohort",
+             caption = "Mathematics &mdash; SAT (grade 11)", max_height = "48vh")
+), min_col = "320px", class = "gof-grid-compact")
 ```
 
 ::: {.notes}
