@@ -11,7 +11,7 @@
 #   make RI_LONG_DATA=/path/to/LONG.Rdata RI_GOF_ROOT=/path/to/Goodness_of_Fit
 
 QMD      := Rhode_Island_2026_SGP_Results.qmd
-HTML     := Rhode_Island_2026_SGP_Results.html
+HTML     := docs/index.html
 CACHE    := summary/ri_sgp_summary.rds
 MANIFEST := Figures/gof/manifest.csv
 
@@ -38,7 +38,11 @@ figures: $(MANIFEST)
 
 render: $(CACHE) $(MANIFEST)
 	quarto render $(QMD) --to revealjs
+	mkdir -p docs
+	mv -f index.html docs/index.html
+	rm -rf index_files
 
 clean:
-	rm -f $(HTML)
-	rm -rf .quarto Rhode_Island_2026_SGP_Results_files Rhode_Island_2026_SGP_Results_cache
+	rm -f $(HTML) index.html
+	rm -rf .quarto index_files index_cache \
+	       Rhode_Island_2026_SGP_Results_files Rhode_Island_2026_SGP_Results_cache

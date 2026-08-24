@@ -6,13 +6,11 @@ for the RIDE Technical Advisory Committee. Covers cohort- and baseline-reference
 growth, goodness of fit, multi-year trends (pandemic recovery / scale drift),
 growth by student group, and catch-up/keep-up target attainment.
 
-Built on the [NCIEA Presentation Template](ai_workflows.qmd) (kept in this folder
-as a styling reference).
-
 ## Present it
 
-Open **`Rhode_Island_2026_SGP_Results.html`** in any browser (self-contained,
-works offline).
+Open **`docs/index.html`** in any browser (self-contained, works offline). The
+deck renders to `docs/index.html` so GitHub Pages can serve it directly — set the
+Pages source to **Deploy from a branch → `/docs`**.
 
 - **`S`** — speaker view (per-slide notes + timer)
 - **`F`** — fullscreen · **`O`** — overview · arrows / space to advance
@@ -29,7 +27,7 @@ the deck consumes.
 Rhode_Island_SGP_LONG_Data.Rdata ─► R/01_generate_summary.R ─► summary/ri_sgp_summary.rds ─┐
 Goodness_of_Fit/*.svg            ─► R/02_collect_figures.R  ─► Figures/gof/*.svg          ─┤
                                                                                            ▼
-                                                       Rhode_Island_2026_SGP_Results.qmd ─► .html
+                                                Rhode_Island_2026_SGP_Results.qmd ─► docs/index.html
 ```
 
 ### Build
@@ -85,16 +83,16 @@ RI_GOF_ROOT="/path/to/Goodness_of_Fit" \
 ## Files
 
 ```
-Rhode_Island_2026_SGP_Results.qmd   deck source (reads the cache; never the LONG file)
+Rhode_Island_2026_SGP_Results.qmd   deck source (reads the cache; renders to docs/index.html)
 R/00_helpers.R                      recodes, labels, mean/median/N formatting
 R/01_generate_summary.R             LONG data ─► summary/ri_sgp_summary.rds (idempotent)
 R/02_collect_figures.R              Goodness_of_Fit ─► Figures/gof/*.svg (clean-named)
 summary/ri_sgp_summary.rds          the compact cached summary
 Figures/gof/                        vendored goodness-of-fit SVGs + manifest.csv
 render.sh · Makefile                pipeline orchestration
-styles/                             theme + figure lightbox (from the template)
-assets/fonts/                       math font (from the template)
-ai_workflows.qmd / .html            the original NCIEA template (styling reference)
+docs/index.html                     rendered deck (GitHub Pages entry point)
+styles/                             reveal.js theme + figure lightbox
+assets/fonts/                       math font
 ```
 
 ## Requirements

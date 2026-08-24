@@ -31,5 +31,8 @@ Rscript R/02_collect_figures.R
 
 echo "==> [3/3] Rendering deck"
 quarto render Rhode_Island_2026_SGP_Results.qmd --to revealjs
+mkdir -p docs
+mv -f index.html docs/index.html
+rm -rf index_files            # self-contained deck; supporting dir not needed
 
-echo "==> Done: Rhode_Island_2026_SGP_Results.html"
+echo "==> Done: docs/index.html (GitHub Pages: serve from /docs)"

@@ -8,6 +8,7 @@ date: 2026-08-27
 date-format: "[RIDE TAC Meeting · ]MMMM D, YYYY"
 format:
   revealjs:
+    output-file: index.html
     theme: [default, styles/presentation-theme.scss]
     slide-number: true
     transition: fade
