@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" role="img" aria-label="A pipeline turning an idea into a talk: idea, then outline, then draft and design, then a human review gate with a green check, then present.">
+  <defs>
+    <style>
+      .lbl { font-family: 'Noto Sans', system-ui, sans-serif; }
+      .ttl { font-family: 'Josefin Sans', system-ui, sans-serif; }
+    </style>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7c7c7c"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="300" fill="rgb(237,237,235)"/>
+
+  <text x="500" y="44" text-anchor="middle" class="ttl" font-size="24" font-weight="600" fill="rgb(20,20,16)">Idea → talk, run like a pipeline</text>
+
+  <g class="lbl" text-anchor="middle" font-size="19" fill="rgb(20,20,16)">
+    <!-- Idea -->
+    <circle cx="86" cy="150" r="50" fill="#8e44ad" opacity="0.12"/>
+    <circle cx="86" cy="150" r="50" fill="none" stroke="#8e44ad" stroke-width="3"/>
+    <text x="86" y="156" class="ttl" font-weight="600">Idea</text>
+    <!-- Outline -->
+    <rect x="196" y="112" width="150" height="76" rx="12" fill="#fff" stroke="#3498DB" stroke-width="2"/>
+    <text x="271" y="156">Outline</text>
+    <!-- Draft & design -->
+    <rect x="392" y="112" width="176" height="76" rx="12" fill="#fff" stroke="#3498DB" stroke-width="2"/>
+    <text x="480" y="147">Draft &amp;</text>
+    <text x="480" y="172">design</text>
+    <!-- Review gate -->
+    <rect x="614" y="112" width="176" height="76" rx="12" fill="#fff" stroke="#27ae60" stroke-width="2.5"/>
+    <text x="702" y="147">Review</text>
+    <text x="702" y="172" font-size="14" fill="#7c7c7c">human check</text>
+    <!-- Present -->
+    <rect x="836" y="112" width="130" height="76" rx="12" fill="#fff" stroke="#3498DB" stroke-width="2"/>
+    <text x="901" y="156">Present</text>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#7c7c7c" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+    <line x1="140" y1="150" x2="190" y2="150"/>
+    <line x1="348" y1="150" x2="386" y2="150"/>
+    <line x1="570" y1="150" x2="608" y2="150"/>
+    <line x1="792" y1="150" x2="830" y2="150"/>
+  </g>
+
+  <!-- green check on the review gate -->
+  <g transform="translate(702,232)">
+    <circle r="18" fill="#2ecc71" opacity="0.16"/>
+    <circle r="18" fill="none" stroke="#27ae60" stroke-width="2.5"/>
+    <path d="M-8 0 l5 6 l11 -13" fill="none" stroke="#27ae60" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="500" y="288" text-anchor="middle" class="lbl" font-size="16" fill="#7c7c7c">AI helps inside every step · the human check stays on before it ships</text>
+</svg>

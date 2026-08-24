@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" role="img" aria-label="Two loops side by side. Left, a virtuous cycle in blue-green spiraling up: do, learn, verify, improve. Right, a vicious cycle in red spiraling down: do, skip the check, error compounds, drift. Caption: same loop, what you feed back sets the direction.">
+  <defs>
+    <style>
+      .lbl { font-family: 'Noto Sans', system-ui, sans-serif; }
+      .ttl { font-family: 'Josefin Sans', system-ui, sans-serif; }
+    </style>
+    <marker id="gtip" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#27ae60"/>
+    </marker>
+    <marker id="rtip" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="500" fill="rgb(237,237,235)"/>
+
+  <!-- ============ LEFT: VIRTUOUS ============ -->
+  <g transform="translate(258,222)">
+    <circle r="118" fill="#2ecc71" opacity="0.07"/>
+    <!-- four directional arcs (clockwise) -->
+    <g fill="none" stroke="#27ae60" stroke-width="4">
+      <path d="M0 -118 A118 118 0 0 1 83 -83" marker-end="url(#gtip)"/>
+      <path d="M118 0 A118 118 0 0 1 83 83" marker-end="url(#gtip)"/>
+      <path d="M0 118 A118 118 0 0 1 -83 83" marker-end="url(#gtip)"/>
+      <path d="M-118 0 A118 118 0 0 1 -83 -83" marker-end="url(#gtip)"/>
+    </g>
+    <!-- center -->
+    <text x="0" y="-6" text-anchor="middle" class="ttl" font-size="26" font-weight="700" fill="#27ae60">Virtuous</text>
+    <text x="0" y="26" text-anchor="middle" class="ttl" font-size="22" font-weight="600" fill="#27ae60">cycle &#8593;</text>
+    <!-- nodes -->
+    <g class="lbl" font-size="18" text-anchor="middle" fill="rgb(20,20,16)">
+      <text x="0" y="-134">Do the work</text>
+      <text x="150" y="6">Learn</text>
+      <text x="0" y="150">Verify</text>
+      <text x="-150" y="6">Improve</text>
+    </g>
+  </g>
+  <text x="258" y="440" text-anchor="middle" class="lbl" font-size="17" fill="#27ae60" font-weight="600">feeds back checked learning &#8594; it compounds</text>
+
+  <!-- divider -->
+  <line x1="500" y1="70" x2="500" y2="392" stroke="#dcdcda" stroke-width="2"/>
+
+  <!-- ============ RIGHT: VICIOUS ============ -->
+  <g transform="translate(742,222)">
+    <circle r="118" fill="#c0392b" opacity="0.07"/>
+    <g fill="none" stroke="#c0392b" stroke-width="4">
+      <path d="M0 -118 A118 118 0 0 1 83 -83" marker-end="url(#rtip)"/>
+      <path d="M118 0 A118 118 0 0 1 83 83" marker-end="url(#rtip)"/>
+      <path d="M0 118 A118 118 0 0 1 -83 83" marker-end="url(#rtip)"/>
+      <path d="M-118 0 A118 118 0 0 1 -83 -83" marker-end="url(#rtip)"/>
+    </g>
+    <text x="0" y="-6" text-anchor="middle" class="ttl" font-size="26" font-weight="700" fill="#c0392b">Vicious</text>
+    <text x="0" y="26" text-anchor="middle" class="ttl" font-size="22" font-weight="600" fill="#c0392b">cycle &#8595;</text>
+    <g class="lbl" font-size="18" text-anchor="middle" fill="rgb(20,20,16)">
+      <text x="0" y="-134">Do the work</text>
+      <text x="168" y="6">Skip the check</text>
+      <text x="0" y="150">Error compounds</text>
+      <text x="-150" y="6">Drift</text>
+    </g>
+  </g>
+  <text x="742" y="440" text-anchor="middle" class="lbl" font-size="17" fill="#c0392b" font-weight="600">feeds back unchecked output &#8594; it decays</text>
+
+  <!-- shared caption -->
+  <text x="500" y="482" text-anchor="middle" class="ttl" font-size="23" font-weight="600" fill="rgb(20,20,16)">Same loop. What you feed back sets the direction.</text>
+</svg>

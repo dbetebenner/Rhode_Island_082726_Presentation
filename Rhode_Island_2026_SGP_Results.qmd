@@ -1,0 +1,782 @@
+---
+title: "Rhode Island 2026 SGP Analyses"
+subtitle: "RICAS & SAT Student Growth Percentile Results"
+author:
+  - name: "Damian W. Betebenner"
+    affiliation: "National Center for the Improvement of Educational Assessment"
+date: 2026-08-27
+date-format: "[RIDE TAC Meeting · ]MMMM D, YYYY"
+format:
+  revealjs:
+    theme: [default, styles/presentation-theme.scss]
+    slide-number: true
+    transition: fade
+    transition-speed: fast
+    width: 1920
+    height: 1080
+    margin: 0.06
+    center: false
+    hash: true
+    history: true
+    controls: true
+    progress: true
+    html-math-method: mathml
+    fig-align: center
+    embed-resources: true
+    include-in-header:
+      - text: |
+          <link rel="preload" href="assets/fonts/NotoSansMath.woff2" as="font" type="font/woff2" crossorigin>
+          <style>
+            @font-face {
+              font-family: "Noto Sans Math";
+              src: url("assets/fonts/NotoSansMath.woff2") format("woff2");
+              font-display: swap;
+            }
+          </style>
+    include-after-body:
+      - text: |
+          <script src="styles/presentation-figure-modal.js"></script>
+execute:
+  echo: false
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    dev: "svg"
+    fig.align: "center"
+---
+
+```{r setup}
+#| include: false
+
+source("R/00_helpers.R")
+suppressPackageStartupMessages({
+  library(data.table)
+  library(ggplot2)
+})
+
+## ---- Load the compact summary cache (never the 70MB LONG file) -------------
+S   <- readRDS("summary/ri_sgp_summary.rds")
+ov  <- as.data.table(S$overall)
+lev <- as.data.table(S$levels)
+sg  <- as.data.table(S$subgroups)
+sgp_pool <- as.data.table(S$subgroups_pooled)
+tg  <- as.data.table(S$targets)
+tgh <- as.data.table(S$targets_highneed)
+M   <- S$meta
+
+AY  <- M$analysis_year          # "2025_2026"
+AYL <- M$analysis_year_label    # "2026"
+
+## ---- Palette + ggplot theme -----------------------------------------------
+COHORT_COL   <- "#3498DB"
+BASELINE_COL <- "#E67E22"
+LEVEL_COLS   <- c(Low = "#C0392B", Typical = "#95A5A6", High = "#27AE60")
+GRID_COL     <- "#D8D8D4"
+TEXT_COL     <- "#141410"
+
+theme_ri <- function(base_size = 22) {
+  theme_minimal(base_size = base_size, base_family = "Noto Sans") +
+    theme(
+      text            = element_text(color = TEXT_COL),
+      plot.title      = element_text(face = "bold", size = rel(1.05)),
+      plot.subtitle   = element_text(color = "#5c5c58"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = GRID_COL, linewidth = 0.4),
+      strip.text      = element_text(face = "bold"),
+      legend.position = "top",
+      legend.title    = element_blank(),
+      axis.title      = element_text(color = "#5c5c58")
+    )
+}
+
+## ---- Lookups / formatting helpers used inline throughout -------------------
+mmn_cell <- function(content, grade_label, norm = c("cohort", "baseline"), year = AY) {
+  norm <- match.arg(norm)
+  r <- ov[CONTENT_AREA == content & GRADE_LABEL == grade_label & YEAR == year]
+  if (!nrow(r) || (norm == "cohort" && r$n_cohort == 0)) return("&mdash;")
+  if (norm == "cohort") fmt_mmn(r$mean_cohort, r$median_cohort, r$n_cohort)
+  else fmt_mmn(r$mean_baseline, r$median_baseline, r$n_baseline)
+}
+
+get_val <- function(content, grade_label, col, year = AY) {
+  r <- ov[CONTENT_AREA == content & GRADE_LABEL == grade_label & YEAR == year]
+  if (!nrow(r)) return(NA_real_)
+  r[[col]]
+}
+
+## ---- Goodness-of-fit figure helpers (clean vendored SVGs) ------------------
+gof_token <- function(content_area) {
+  data.table::fcase(
+    content_area == "ELA", "ELA",
+    content_area == "MATHEMATICS", "MATH",
+    content_area == "ELA_SAT", "ELA_SAT",
+    content_area == "MATHEMATICS_SAT", "MATH_SAT",
+    default = content_area
+  )
+}
+
+gof_src <- function(content_area, grade, year, norm = "cohort") {
+  file.path("Figures", "gof",
+            sprintf("%s_%s_%s_g%s.svg", gof_token(content_area), year, norm, grade))
+}
+
+## One <figure> (works with the theme figure-modal lightbox: `.reveal figure img`)
+gof_figure <- function(content_area, grade, year, norm = "cohort",
+                       caption = NULL, alt = NULL) {
+  src <- gof_src(content_area, grade, year, norm)
+  if (!file.exists(src)) {
+    return(sprintf('<div style="padding:1em;color:#c0392b;font-size:0.6em">missing: %s</div>', src))
+  }
+  if (is.null(caption)) caption <- sprintf("%s Grade %s &mdash; %s (%s)",
+                                           pretty_subject(content_area), grade,
+                                           pretty_year(year), norm)
+  if (is.null(alt)) alt <- gsub("&mdash;", "-", caption)
+  sprintf(
+    '<figure style="margin:0;text-align:center">
+       <img src="%s" alt="%s" style="width:100%%;height:auto"/>
+       <figcaption>%s</figcaption>
+     </figure>', src, alt, caption)
+}
+
+## Emit raw HTML as a pandoc passthrough block so `native_divs` does not try to
+## pair our <div>s with Quarto's auto `::: {.cell}` wrapper (which otherwise
+## leaks stray "::" text). Use for every asis chunk that prints raw HTML.
+emit_html <- function(x) cat("\n```{=html}\n", x, "\n```\n", sep = "")
+
+## Responsive grid of GoF figures
+gof_grid <- function(figs, min_col = "300px", gap = "0.6em") {
+  emit_html(sprintf(
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(%s,1fr));gap:%s;align-items:start">%s</div>',
+    min_col, gap, paste(figs, collapse = "")))
+}
+```
+
+## The next 20 minutes {.center}
+
+::: {.visually-hidden}
+Roadmap for the talk
+:::
+
+::: {style="font-size: 1.05em;"}
+1. **What was run** &mdash; RICAS and PSAT/SAT analyses, cohort and baseline
+2. **2026 results** &mdash; overall growth and model fit
+3. **Trends over time** &mdash; pandemic recovery and possible scale drift
+4. **Growth equity** &mdash; results by student group
+5. **Target attainment** &mdash; catch-up / keep-up and move-up / stay-up
+6. **Questions for the TAC**
+:::
+
+::: {.key-insight}
+**`r fmt_count(M$n_growth_cohort_total)`** students received a `r AYL` growth percentile across RICAS (grades 4&ndash;8) and SAT (grade 11), in both cohort-referenced and pre-pandemic baseline-referenced norms.
+:::
+
+::: {.notes}
+This is a TAC audience &mdash; no SGP primer. Set the arc, then move. All numbers on the slides are generated directly from the LONG data via a cached summary, so they are current as of the latest data run.
+:::
+
+
+# SGP results for 2026 {.center}
+
+::: {.visually-hidden}
+Section one: 2026 results
+:::
+
+
+## What was run: RICAS (grades 4&ndash;8)
+
+Two SGP analyses were conducted on the `r AYL` RICAS data (ELA and Mathematics):
+
+- **Cohort-referenced** &mdash; growth norms built from the most recent cohorts; by construction these center mean/median SGP on **50**.
+- **Baseline-referenced** &mdash; historical (pre-pandemic 2017&ndash;2019) coefficient matrices applied to current data. These are **not** centered on 50 and let us examine COVID-era academic recovery and possible **scale drift**.
+- **Projections** (lagged and straight) were calculated using both norm sets.
+
+::: {.key-insight}
+Cohort norms answer *"how did this student grow relative to academic peers this year?"* Baseline norms answer *"how does that growth compare to pre-pandemic rates of learning?"*
+:::
+
+::: {.notes}
+Same two-analysis structure as prior years. Emphasize that baseline is the diagnostic lens for recovery / drift.
+:::
+
+
+## What was run: PSAT &rarr; SAT (grade 11)
+
+Two SGP analyses were conducted on the PSAT-10 &rarr; SAT progression (single prior):
+
+- **Cohort-referenced** &mdash; centered on 50 by construction.
+- **Baseline-referenced** &mdash; pre-pandemic (2018&ndash;2019) norms applied to current data.
+- **No projections** &mdash; SAT (grade 11) is the last tested grade in Rhode Island.
+
+::: {.theorem-box}
+::: {.theorem-box-title}
+Single-prior growth
+:::
+Grade-11 growth uses one prior (PSAT-10). It is a shorter growth window than the RICAS grades, so baseline comparisons are correspondingly more sensitive to form and linking effects.
+:::
+
+::: {.notes}
+Flag the single-prior caveat now; it matters when we read the SAT baseline numbers.
+:::
+
+
+## Provenance &amp; reproducibility {.smaller}
+
+::: {.columns}
+::: {.column width="56%"}
+- All analyses used data supplied by the Rhode Island Department of Education.
+- Conducted with the **`SGP` R package** (version `r M$sgp_package_version`).
+- All analyses converged; goodness-of-fit plots confirm successful analyses.
+- Source code is public on GitHub:
+  - Analyses: [github.com/CenterForAssessment/Rhode_Island](https://github.com/CenterForAssessment/Rhode_Island)
+  - SGP package: [github.com/CenterForAssessment/SGP](https://github.com/CenterForAssessment/SGP)
+:::
+::: {.column width="42%"}
+::: {.key-insight-box}
+::: {.key-insight-box-title}
+Reproducible pipeline
+:::
+This deck is generated from a cached summary of the student-level LONG data. When RIDE supplies revised data, re-running the pipeline refreshes **every** number and table automatically.
+:::
+:::
+:::
+
+::: {.notes}
+The reproducibility box is new this year &mdash; it previews the "I'll re-run this when the revised file arrives" workflow.
+:::
+
+
+## 2026 SGP results at a glance
+
+```{r results-table}
+#| output: asis
+
+grades <- c("4", "5", "6", "7", "8", "11 (SAT)")
+content_ela  <- function(g) if (g == "11 (SAT)") "ELA_SAT" else "ELA"
+content_math <- function(g) if (g == "11 (SAT)") "MATHEMATICS_SAT" else "MATHEMATICS"
+
+rows <- vapply(grades, function(g) {
+  sprintf(
+    '<tr><th class="rt-grade">%s</th><td>%s</td><td class="rt-base">%s</td><td>%s</td><td class="rt-base">%s</td></tr>',
+    g,
+    mmn_cell(content_ela(g),  g, "cohort"),
+    mmn_cell(content_ela(g),  g, "baseline"),
+    mmn_cell(content_math(g), g, "cohort"),
+    mmn_cell(content_math(g), g, "baseline")
+  )
+}, character(1))
+
+emit_html(sprintf('
+<style>
+  table.results-table { border-collapse: collapse; width: 100%%; font-size: 0.72em; }
+  table.results-table th, table.results-table td { padding: 0.35em 0.6em; text-align: center; border-bottom: 1px solid var(--color-border); }
+  table.results-table thead .grp { font-family: "Josefin Sans", sans-serif; font-weight: 600; }
+  table.results-table thead .grp-ela  { color: %s; border-bottom: 2px solid %s; }
+  table.results-table thead .grp-math { color: %s; border-bottom: 2px solid %s; }
+  table.results-table .rt-grade { text-align: left; font-family: "Josefin Sans", sans-serif; }
+  table.results-table .rt-base { color: %s; }
+  table.results-table tbody tr:hover { background: var(--color-surface-subtle); }
+  .rt-caption { font-size: 0.55em; color: var(--color-secondary); font-style: italic; margin-top: 0.4em; }
+</style>
+<table class="results-table">
+  <thead>
+    <tr>
+      <th rowspan="2">Grade</th>
+      <th class="grp grp-ela" colspan="2">ELA</th>
+      <th class="grp grp-math" colspan="2">Mathematics</th>
+    </tr>
+    <tr>
+      <th>Cohort</th><th class="rt-base">Baseline</th>
+      <th>Cohort</th><th class="rt-base">Baseline</th>
+    </tr>
+  </thead>
+  <tbody>%s</tbody>
+</table>
+<div class="rt-caption">Each cell: mean&#8202;/&#8202;median&#8202;/&#8202;N of student growth percentiles, %s. Cohort norms center on 50 by construction; baseline norms are referenced to pre-pandemic rates of learning.</div>
+',
+COHORT_COL, COHORT_COL, "#7a5c33", "#7a5c33", BASELINE_COL,
+paste(rows, collapse = "\n"), AYL))
+```
+
+::: {.notes}
+Walk the cohort columns first (all ~50, as expected), then the baseline columns &mdash; that is where the story is. The deviations from 50 are what we dig into next.
+:::
+
+
+## Reading the 2026 baseline results
+
+```{r baseline-narrative}
+#| output: asis
+
+## Flag baseline means that deviate meaningfully from 50 (analysis year, RICAS + SAT).
+by <- ov[YEAR == AY & n_baseline > 0]
+by[, dev := mean_baseline - 50]
+flag <- by[abs(dev) >= 2][order(-abs(dev))]
+
+mk <- function(x) sprintf("%s Grade %s (mean <strong>%.1f</strong>)",
+                          x$SUBJECT, x$GRADE_LABEL, x$mean_baseline)
+li <- function(dt) {
+  if (!nrow(dt)) return("<li>None materially different</li>")
+  paste0("<li>", vapply(seq_len(nrow(dt)), function(i) mk(dt[i]), character(1)), "</li>", collapse = "")
+}
+above <- flag[dev > 0]; below <- flag[dev < 0]
+
+emit_html(sprintf('
+<div style="display:flex;gap:2em;align-items:flex-start">
+  <div style="flex:1">
+    <p style="font-weight:600;color:#27ae60;margin-bottom:0.2em">Above pre-pandemic rates (baseline mean &gt; 52)</p>
+    <ul>%s</ul>
+  </div>
+  <div style="flex:1">
+    <p style="font-weight:600;color:#c0392b;margin-bottom:0.2em">Below pre-pandemic rates (baseline mean &lt; 48)</p>
+    <ul>%s</ul>
+  </div>
+</div>', li(above), li(below)))
+```
+
+::: {.key-insight}
+Cohort-referenced results are, as expected, centered on 50 with excellent model fit. The **baseline** results are uneven across grade/content &mdash; the pattern we investigate in the trends section.
+:::
+
+::: {.notes}
+This slide is generated from the data, so the flagged grades update automatically with a new run. Keep interpretation cautious: deviations can reflect real growth change, cohort composition, or scale drift.
+:::
+
+
+## Growth distribution: Low / Typical / High
+
+```{r level-distribution}
+#| fig-width: 16
+#| fig-height: 6.2
+
+ld <- lev[YEAR == AY & !is.na(LEVEL)]
+ld[, GRADE_LABEL := factor(GRADE_LABEL, levels = c("4","5","6","7","8","11 (SAT)"))]
+ld[, NORM := factor(NORM, levels = c("Cohort", "Baseline"))]
+
+ggplot(ld, aes(x = GRADE_LABEL, y = pct, fill = LEVEL)) +
+  geom_col(width = 0.78) +
+  geom_hline(yintercept = c(33.3, 66.7), color = "white", linewidth = 0.5, linetype = "22") +
+  facet_grid(SUBJECT ~ NORM) +
+  scale_fill_manual(values = LEVEL_COLS) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), expand = expansion(mult = c(0, 0.02))) +
+  labs(x = NULL, y = NULL,
+       title = paste0("Share of students at each growth level, ", AYL),
+       subtitle = "Cohort norms split roughly one-third each; baseline shifts reveal recovery / drift") +
+  theme_ri(20)
+```
+
+::: {.notes}
+Cohort panels should show the classic ~1/3 Low, Typical, High. Where baseline panels tilt toward Low or High is where pre-pandemic-referenced growth diverges. Point to the largest tilts.
+:::
+
+
+# Goodness of fit {.center}
+
+::: {.visually-hidden}
+Section two: goodness of fit
+:::
+
+::: {.notes}
+For a TAC audience this is a fit-confirmation section. Keep it brisk; the plots are click-to-enlarge if anyone wants detail.
+:::
+
+
+## RICAS ELA &mdash; cohort model fit, `r AYL`
+
+```{r gof-ela-cohort}
+#| output: asis
+gof_grid(vapply(c("4","5","6","7","8"),
+                function(g) gof_figure("ELA", g, AY, "cohort",
+                                       caption = sprintf("ELA Grade %s", g)),
+                character(1)))
+```
+
+::: {.notes}
+Uniform bands across prior achievement = good fit. All five grades converge cleanly.
+:::
+
+
+## RICAS Mathematics &mdash; cohort model fit, `r AYL`
+
+```{r gof-math-cohort}
+#| output: asis
+gof_grid(vapply(c("4","5","6","7","8"),
+                function(g) gof_figure("MATHEMATICS", g, AY, "cohort",
+                                       caption = sprintf("Mathematics Grade %s", g)),
+                character(1)))
+```
+
+
+## SAT &mdash; cohort model fit, `r AYL`
+
+```{r gof-sat-cohort}
+#| output: asis
+gof_grid(c(
+  gof_figure("ELA_SAT", "EOCT", AY, "cohort", caption = "ELA &mdash; SAT (grade 11)"),
+  gof_figure("MATHEMATICS_SAT", "EOCT", AY, "cohort", caption = "Mathematics &mdash; SAT (grade 11)")
+), min_col = "420px")
+```
+
+::: {.notes}
+Single-prior SAT fit. Note the shorter growth window relative to RICAS.
+:::
+
+
+## Cohort vs. baseline fit &mdash; ELA Grade 7
+
+```{r gof-contrast}
+#| output: asis
+gof_grid(c(
+  gof_figure("ELA", "7", AY, "cohort",   caption = "ELA Grade 7 &mdash; Cohort norms"),
+  gof_figure("ELA", "7", AY, "baseline", caption = "ELA Grade 7 &mdash; Baseline norms")
+), min_col = "420px")
+```
+
+::: {.key-insight}
+Both norm sets fit the data well. The difference is the **reference**: cohort centers on this year's peers; baseline holds the pre-pandemic standard fixed &mdash; so a level shift here is signal, not misfit.
+:::
+
+
+# In-depth trend analysis {.center}
+
+::: {.visually-hidden}
+Section three: trends over time
+:::
+
+::: {.notes}
+The analytic heart of the talk: pandemic recovery vs. scale drift. Slow down here.
+:::
+
+
+## Pandemic-related academic recovery
+
+::: {.columns}
+::: {.column width="54%"}
+Five years on from the onset of the pandemic, we examine **changes in growth over time** to distinguish among:
+
+- **Ripple effects** &mdash; continued downstream impact for students whose early schooling was disrupted.
+- **Scale drift / linking** &mdash; movement in the underlying scale over time.
+- **Real change** in student growth.
+:::
+::: {.column width="42%"}
+::: {.theorem-box}
+::: {.theorem-box-title}
+Two views of the same data
+:::
+**Diagonal** &mdash; follow one cohort as it ages grade-to-grade.
+
+**Vertical** &mdash; hold a grade fixed and watch it move year-to-year (a drift indicator).
+:::
+:::
+:::
+
+::: {.notes}
+Set up the two reading directions we'll use on the next slides.
+:::
+
+
+## Where were they during the pandemic?
+
+```{r pandemic-grid}
+#| output: asis
+## Grade in 2026 -> grade during the two pandemic school years.
+tbl <- data.frame(
+  cur   = c("Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 11 (SAT)"),
+  s2020 = c("PK","K","Grade 1","Grade 2","Grade 3","Grade 6"),
+  s2021 = c("K","Grade 1","Grade 2","Grade 3","Grade 4","Grade 7")
+)
+rows <- apply(tbl, 1, function(r)
+  sprintf('<tr><th style="text-align:left;font-family:\'Josefin Sans\',sans-serif">%s</th><td>%s</td><td>%s</td></tr>',
+          r["cur"], r["s2020"], r["s2021"]))
+emit_html(sprintf('
+<table class="results-table" style="font-size:0.7em">
+  <thead><tr><th>Current (2026)</th><th>Spring 2020</th><th>2020&ndash;2021</th></tr></thead>
+  <tbody>%s</tbody>
+</table>
+<div class="rt-caption">The lower grades tested in 2026 spent their earliest, most foundational schooling years during pandemic disruption.</div>',
+paste(rows, collapse = "")))
+```
+
+::: {.notes}
+The grade-7 and grade-8 cohorts (early-literacy grades during the pandemic) are the ones we track next.
+:::
+
+
+## Trend: same grade over time (drift indicator)
+
+```{r trend-samegrade}
+#| fig-width: 16
+#| fig-height: 6.2
+
+tr <- ov[ASSESSMENT == "RICAS" & n_baseline > 0 &
+         YEAR %in% c("2022_2023","2023_2024","2024_2025","2025_2026")]
+tr[, GRADE := factor(GRADE, levels = as.character(4:8))]
+
+ggplot(tr, aes(x = YEAR_LABEL, y = mean_baseline, color = GRADE, group = GRADE)) +
+  geom_hline(yintercept = 50, color = "#9a9a94", linetype = "22") +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2.6) +
+  facet_wrap(~ SUBJECT) +
+  scale_color_brewer(palette = "Dark2", name = "Grade") +
+  labs(x = NULL, y = "Mean baseline SGP",
+       title = "Baseline-referenced growth by grade, over time",
+       subtitle = "Large year-to-year moves for a fixed grade are consistent with scale drift; 50 = pre-pandemic rate") +
+  theme_ri(20) + theme(legend.position = "right")
+```
+
+::: {.notes}
+This is the vertical/drift reading, fully data-driven. Point to grades whose baseline mean swings across years &mdash; those are drift candidates.
+:::
+
+
+## ELA Grade 7 over time &mdash; goodness of fit
+
+```{r gof-drift-ela7}
+#| output: asis
+gof_grid(vapply(c("2022_2023","2023_2024","2024_2025","2025_2026"),
+                function(y) gof_figure("ELA", "7", y, "baseline",
+                                       caption = sprintf("ELA Grade 7 &mdash; %s", pretty_year(y))),
+                character(1)), min_col = "300px")
+```
+
+::: {.notes}
+Same grade, four administrations, baseline norms. Consistent shape = stable; systematic drift in the bands = a linking/scale concern.
+:::
+
+
+## Mathematics Grade 6 over time &mdash; goodness of fit
+
+```{r gof-drift-math6}
+#| output: asis
+gof_grid(vapply(c("2022_2023","2023_2024","2024_2025","2025_2026"),
+                function(y) gof_figure("MATHEMATICS", "6", y, "baseline",
+                                       caption = sprintf("Math Grade 6 &mdash; %s", pretty_year(y))),
+                character(1)), min_col = "300px")
+```
+
+
+## Diagonal: following the 2026 Grade-8 cohort
+
+```{r gof-diagonal-ela8}
+#| output: asis
+gof_grid(c(
+  gof_figure("ELA", "6", "2023_2024", "baseline", caption = "Grade 6 &mdash; 2024"),
+  gof_figure("ELA", "7", "2024_2025", "baseline", caption = "Grade 7 &mdash; 2025"),
+  gof_figure("ELA", "8", "2025_2026", "baseline", caption = "Grade 8 &mdash; 2026")
+), min_col = "340px")
+```
+
+::: {.key-insight}
+The same students, three consecutive years (ELA). This cohort was in the early-literacy grades during the pandemic &mdash; the diagonal lets us watch their baseline-referenced growth as they progressed.
+:::
+
+::: {.notes}
+Diagonal reading: this is one cohort aging through the system, not a fixed grade. Contrast with the previous drift slides.
+:::
+
+
+# Growth equity {.center}
+
+::: {.visually-hidden}
+Section four: growth by student group
+:::
+
+::: {.notes}
+Descriptive equity lens: are growth rates comparable across groups? Keep it factual.
+:::
+
+
+## Growth by student group (RICAS, `r AYL`)
+
+```{r equity-table}
+#| output: asis
+
+dims <- c("English Learner", "Students w/ Disability", "Economically Disadv.")
+sp <- sgp_pool[ASSESSMENT == "RICAS" & DIMENSION %in% dims]
+
+cell <- function(subj, grp, col) {
+  r <- sp[SUBJECT == subj & GROUP == grp]
+  if (!nrow(r)) return("&mdash;")
+  fmt_mmn(r[[paste0("mean_", col)]], r[[paste0("median_", col)]], r[[paste0("n_", col)]])
+}
+
+body <- ""
+for (d in dims) {
+  grps <- sp[DIMENSION == d, unique(GROUP)]
+  body <- paste0(body, sprintf('<tr class="dim-row"><th colspan="5">%s</th></tr>', d))
+  for (grp in grps) {
+    body <- paste0(body, sprintf(
+      '<tr><th class="rt-grade">%s</th><td>%s</td><td class="rt-base">%s</td><td>%s</td><td class="rt-base">%s</td></tr>',
+      grp, cell("ELA", grp, "cohort"), cell("ELA", grp, "baseline"),
+      cell("Mathematics", grp, "cohort"), cell("Mathematics", grp, "baseline")))
+  }
+}
+
+emit_html(sprintf('
+<style>
+  table.results-table tr.dim-row th { text-align:left; background: var(--color-surface-subtle);
+    font-family:"Josefin Sans",sans-serif; color: var(--color-primary); padding-top:0.5em; }
+</style>
+<table class="results-table" style="font-size:0.62em">
+  <thead>
+    <tr><th rowspan="2">Group</th>
+        <th class="grp grp-ela" colspan="2">ELA</th>
+        <th class="grp grp-math" colspan="2">Mathematics</th></tr>
+    <tr><th>Cohort</th><th class="rt-base">Baseline</th><th>Cohort</th><th class="rt-base">Baseline</th></tr>
+  </thead>
+  <tbody>%s</tbody>
+</table>
+<div class="rt-caption">mean&#8202;/&#8202;median&#8202;/&#8202;N, RICAS grades 4&ndash;8 pooled, %s.</div>', body, AYL))
+```
+
+::: {.notes}
+Cohort SGPs near 50 across groups indicate comparable within-year growth. Baseline gaps reflect pre-pandemic-referenced differences. Note where cohort and baseline tell different stories.
+:::
+
+
+## Equity gaps at a glance
+
+```{r equity-plot}
+#| fig-width: 16
+#| fig-height: 6.0
+
+dims <- c("English Learner", "Students w/ Disability", "Economically Disadv.")
+ep <- sgp_pool[ASSESSMENT == "RICAS" & DIMENSION %in% dims,
+               .(mean_sgp = weighted.mean(mean_cohort, n_cohort),
+                 mean_base = weighted.mean(mean_baseline, n_baseline)),
+               by = .(DIMENSION, GROUP)]
+epl <- melt(ep, id.vars = c("DIMENSION","GROUP"),
+            measure.vars = c("mean_sgp","mean_base"),
+            variable.name = "norm", value.name = "sgp")
+epl[, norm := factor(norm, labels = c("Cohort", "Baseline"))]
+epl[, GROUP := gsub(" \\(.*\\)$", "", GROUP)]
+
+ggplot(epl, aes(x = sgp, y = reorder(GROUP, sgp), fill = norm)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.65) +
+  geom_vline(xintercept = 50, color = "#9a9a94", linetype = "22") +
+  facet_wrap(~ DIMENSION, scales = "free_y", ncol = 1) +
+  scale_fill_manual(values = c(Cohort = COHORT_COL, Baseline = BASELINE_COL)) +
+  labs(x = "Mean SGP (RICAS ELA + Math pooled)", y = NULL,
+       title = paste0("Growth by student group, ", AYL)) +
+  theme_ri(19)
+```
+
+::: {.notes}
+The dashed line is 50. Cohort bars near 50 = comparable current-year growth; the cohort-to-baseline distance shows the pre-pandemic-referenced gap. Descriptive, not causal.
+:::
+
+
+# Target attainment {.center}
+
+::: {.visually-hidden}
+Section five: catch-up / keep-up
+:::
+
+
+## Catch-up / keep-up attainment (RICAS, `r AYL`)
+
+```{r targets-plot}
+#| fig-width: 16
+#| fig-height: 6.0
+
+ct <- tg[METRIC == "Catch Up / Keep Up" & NORM == "Cohort" & ASSESSMENT == "RICAS"]
+ct[, GRADE_LABEL := factor(GRADE_LABEL, levels = as.character(4:8))]
+ct[, aspiration := factor(aspiration, levels = c("Catch Up", "Keep Up"))]
+
+ggplot(ct, aes(x = GRADE_LABEL, y = rate, fill = aspiration)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.68) +
+  facet_wrap(~ SUBJECT) +
+  scale_fill_manual(values = c("Catch Up" = "#8E44AD", "Keep Up" = COHORT_COL)) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     limits = c(0, 100), expand = expansion(mult = c(0, 0.02))) +
+  labs(x = "Grade", y = "% attaining target",
+       title = "Share of students on track to catch up / keep up",
+       subtitle = "Catch Up = students below proficient; Keep Up = students at/above proficient (cohort targets)") +
+  theme_ri(20)
+```
+
+::: {.notes}
+"Catch Up: Yes" among students who need to catch up; "Keep Up: Yes" among those at/above. Keep-up rates run higher than catch-up rates &mdash; the recovery challenge is concentrated in catch-up.
+:::
+
+
+## Target attainment by prior achievement
+
+```{r targets-highneed}
+#| output: asis
+
+th <- tgh[NORM == "Cohort"]
+mk_stat <- function(status_label, aspiration_label) {
+  r <- th[grepl(sub(" .*", "", status_label), HIGH_NEED_STATUS) & aspiration == aspiration_label]
+  if (!nrow(r)) return("&mdash;")
+  sprintf("%.0f%%", r$rate)
+}
+
+low  <- th[grepl("< 25", HIGH_NEED_STATUS) & aspiration == "Catch Up"]
+high <- th[grepl("> 75", HIGH_NEED_STATUS) & aspiration == "Keep Up"]
+
+emit_html(sprintf('
+<div style="display:flex;gap:2em;justify-content:center;margin-top:0.5em">
+  <div class="stat-callout"><div class="stat-number">%.0f%%</div>
+    <div class="stat-label">of lowest-prior-achievement students (&lt;25th %%ile)<br/>are on track to <strong>catch up</strong></div></div>
+  <div class="stat-callout"><div class="stat-number">%.0f%%</div>
+    <div class="stat-label">of highest-prior-achievement students (&gt;75th %%ile)<br/>are on track to <strong>keep up</strong></div></div>
+</div>', low$rate, high$rate))
+```
+
+::: {.key-insight}
+Students entering below the 25th percentile face the steepest catch-up targets and attain them least often &mdash; the central equity concern for accountability use of these growth results.
+:::
+
+::: {.notes}
+Numbers pull from the high-need contrast in the cache. This frames the accountability-use conversation.
+:::
+
+
+## Summary
+
+- **Cohort-referenced SGPs** show excellent model fit across RICAS and SAT &mdash; suitable for accountability calculations.
+- **Baseline-referenced SGPs** are uneven: some grade/content pairs sit above pre-pandemic rates of learning, others below.
+- **Trend analysis** (same-grade-over-time and diagonal-cohort) shows changes that are difficult to attribute to a single mechanism &mdash; recovery, cohort composition, and scale drift all remain in play.
+- **Continued equating / linking effects over time cannot be ruled out** as a contributor to the baseline movement.
+- **Equity and target-attainment** results locate the recovery challenge primarily in catch-up for the lowest-prior-achievement students.
+
+::: {.notes}
+Land the honest bottom line: cohort norms are solid; baseline movement is real but multiply-determined, and drift is not ruled out.
+:::
+
+
+## Questions for the TAC {.smaller}
+
+::: {.key-insight-box}
+::: {.key-insight-box-title}
+We would value the committee's guidance on
+:::
+1. **Disentangling mechanisms.** What additional analyses would help separate pandemic ripple effects, scale drift, and genuine changes in student growth over time?
+2. **Baseline norm maintenance.** If baseline SGPs continue going forward, should Rhode Island **re-establish baseline norms** (moving off the pre-pandemic 2017&ndash;2019 reference) &mdash; and on what cadence?
+3. **Form effects.** Would examining cohort-referenced growth **by form** (potentially leveraging MA data) be a productive way to probe linking/form effects? Is that something MA would be interested in pursuing?
+4. **Accountability use.** Given the baseline unevenness, are there guardrails the TAC would recommend for interpreting baseline-referenced growth in public reporting?
+:::
+
+::: {.notes}
+This is the discussion slide &mdash; leave it up and open the floor. These carry forward last year's open questions and add the reporting-guardrails item.
+:::
+
+
+## Thank you {.center}
+
+::: {style="text-align: center; padding-top: 1em;"}
+::: {.conference-badge}
+RIDE Technical Advisory Committee
+:::
+
+**Rhode Island 2026 SGP Analyses**
+
+::: {style="font-size: 0.7em; color: #7c7c7c;"}
+Damian W. Betebenner &middot; National Center for the Improvement of Educational Assessment
+:::
+:::
+
+::: {.notes}
+Close and thank the committee. Offer to circulate the deck and the reproducible pipeline.
+:::

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 420" role="img" aria-label="A structured pipeline: a code change triggers test, then build, then deploy, each stage passing an automatic green check.">
+  <defs>
+    <style>
+      .lbl { font-family: 'Noto Sans', system-ui, sans-serif; }
+      .ttl { font-family: 'Josefin Sans', system-ui, sans-serif; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7c7c7c"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="420" fill="rgb(237,237,235)"/>
+
+  <text x="500" y="52" text-anchor="middle" class="ttl" font-size="26" font-weight="600" fill="rgb(20,20,16)">Every change runs the same named steps — automatically</text>
+
+  <!-- trigger -->
+  <g class="lbl" text-anchor="middle">
+    <circle cx="96" cy="200" r="52" fill="#8e44ad" opacity="0.12"/>
+    <circle cx="96" cy="200" r="52" fill="none" stroke="#8e44ad" stroke-width="3"/>
+    <text x="96" y="194" font-size="19" fill="rgb(20,20,16)">Save a</text>
+    <text x="96" y="218" font-size="19" fill="rgb(20,20,16)">change</text>
+    <text x="96" y="286" class="ttl" font-size="16" fill="#7c7c7c">trigger</text>
+  </g>
+
+  <!-- stages -->
+  <g class="lbl" text-anchor="middle" font-size="21" fill="rgb(20,20,16)">
+    <!-- Test -->
+    <rect x="248" y="150" width="180" height="100" rx="14" fill="#fff" stroke="#3498DB" stroke-width="2"/>
+    <text x="338" y="200" class="ttl" font-weight="600">Test</text>
+    <text x="338" y="228" font-size="15" fill="#7c7c7c">does it still work?</text>
+    <!-- Build -->
+    <rect x="470" y="150" width="180" height="100" rx="14" fill="#fff" stroke="#3498DB" stroke-width="2"/>
+    <text x="560" y="200" class="ttl" font-weight="600">Build</text>
+    <text x="560" y="228" font-size="15" fill="#7c7c7c">assemble it</text>
+    <!-- Deploy -->
+    <rect x="692" y="150" width="180" height="100" rx="14" fill="#fff" stroke="#3498DB" stroke-width="2"/>
+    <text x="782" y="200" class="ttl" font-weight="600">Deploy</text>
+    <text x="782" y="228" font-size="15" fill="#7c7c7c">publish it</text>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#7c7c7c" stroke-width="2.5" fill="none" marker-end="url(#arrow)">
+    <line x1="150" y1="200" x2="242" y2="200"/>
+    <line x1="430" y1="200" x2="464" y2="200"/>
+    <line x1="652" y1="200" x2="686" y2="200"/>
+  </g>
+
+  <!-- green checks under each stage -->
+  <g>
+    <g transform="translate(338,300)">
+      <circle r="20" fill="#2ecc71" opacity="0.16"/>
+      <circle r="20" fill="none" stroke="#27ae60" stroke-width="2.5"/>
+      <path d="M-9 0 l6 7 l12 -15" fill="none" stroke="#27ae60" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(560,300)">
+      <circle r="20" fill="#2ecc71" opacity="0.16"/>
+      <circle r="20" fill="none" stroke="#27ae60" stroke-width="2.5"/>
+      <path d="M-9 0 l6 7 l12 -15" fill="none" stroke="#27ae60" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(782,300)">
+      <circle r="20" fill="#2ecc71" opacity="0.16"/>
+      <circle r="20" fill="none" stroke="#27ae60" stroke-width="2.5"/>
+      <path d="M-9 0 l6 7 l12 -15" fill="none" stroke="#27ae60" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <text x="560" y="360" text-anchor="middle" class="lbl" font-size="17" fill="#7c7c7c">green means it passed · red would stop the line before anything ships</text>
+</svg>
