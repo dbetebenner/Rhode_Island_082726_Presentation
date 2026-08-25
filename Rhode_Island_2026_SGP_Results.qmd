@@ -436,9 +436,11 @@ Single-prior SAT fit. Note the shorter growth window relative to RICAS.
 ```{r gof-contrast}
 #| output: asis
 gof_grid(c(
-  gof_figure("ELA", "7", AY, "cohort",   caption = "ELA Grade 7 &mdash; Cohort norms"),
-  gof_figure("ELA", "7", AY, "baseline", caption = "ELA Grade 7 &mdash; Baseline norms")
-), min_col = "420px")
+  gof_figure("ELA", "7", AY, "cohort",
+             caption = "ELA Grade 7 &mdash; Cohort norms", max_height = "63vh"),
+  gof_figure("ELA", "7", AY, "baseline",
+             caption = "ELA Grade 7 &mdash; Baseline norms", max_height = "63vh")
+), min_col = "380px", class = "gof-grid-compact")
 ```
 
 ::: {.key-insight}
