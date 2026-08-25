@@ -420,10 +420,10 @@ gof_grid(vapply(c("4","5","6","7","8"),
 #| output: asis
 gof_grid(c(
   gof_figure("ELA_SAT", "EOCT", AY, "cohort",
-             caption = "ELA &mdash; SAT (grade 11)", max_height = "48vh"),
+             caption = "ELA &mdash; SAT (grade 11)", max_height = "63vh"),
   gof_figure("MATHEMATICS_SAT", "EOCT", AY, "cohort",
-             caption = "Mathematics &mdash; SAT (grade 11)", max_height = "48vh")
-), min_col = "320px", class = "gof-grid-compact")
+             caption = "Mathematics &mdash; SAT (grade 11)", max_height = "63vh")
+), min_col = "380px", class = "gof-grid-compact")
 ```
 
 ::: {.notes}

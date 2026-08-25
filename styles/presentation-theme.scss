@@ -456,7 +456,7 @@ $presentation-heading-font-weight: 600;
 // Portrait GoF SVGs (612×792 pt) blow past slide height when only one or two
 // panels share a row at full column width — cap height and center horizontally.
 .reveal .gof-grid-compact figure img {
-  max-height: 48vh;
+  max-height: 63vh;
   width: auto;
   max-width: 100%;
   display: block;
