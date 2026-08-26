@@ -57,6 +57,19 @@ clean_gender <- function(x) {
   x
 }
 
+## Source file labels Non-ELL students as "(ELL)"; keep the parenthetical
+## parallel with IEP / Non-IEP.
+clean_ell <- function(x) {
+  x <- as.character(x)
+  x[x == "Non-English Language Learners (ELL)"] <-
+    "Non-English Language Learners (non-ELL)"
+  x[x == "English Language Learners (ELL)"] <-
+    "English Language Learners (ELL)"
+  x[!x %in% c("English Language Learners (ELL)",
+              "Non-English Language Learners (non-ELL)")] <- NA_character_
+  x
+}
+
 ## ---------------------------------------------------------------------------
 ## Pretty labels
 ## ---------------------------------------------------------------------------

@@ -68,6 +68,9 @@ M   <- S$meta
 
 AY  <- M$analysis_year          # "2025_2026"
 AYL <- M$analysis_year_label    # "2026"
+if (is.null(M$data_received) || !nzchar(M$data_received)) {
+  M$data_received <- "August 25, 2026"
+}
 
 ## ---- Palette + ggplot theme -----------------------------------------------
 COHORT_COL   <- "#3498DB"
@@ -159,7 +162,7 @@ gof_grid <- function(figs, min_col = "300px", gap = "0.6em", class = NULL) {
 }
 ```
 
-## The next 20 minutes {.center}
+## Roadmap {.center}
 
 ::: {.visually-hidden}
 Roadmap for the talk
@@ -168,18 +171,18 @@ Roadmap for the talk
 ::: {style="font-size: 1.05em;"}
 1. **What was run** &mdash; RICAS and PSAT/SAT analyses, cohort and baseline
 2. **2026 results** &mdash; overall growth and model fit
-3. **Trends over time** &mdash; pandemic recovery and possible scale drift
+3. **Trends over time** &mdash; pandemic recovery, slower learning, and possible scale drift
 4. **Growth equity** &mdash; results by student group
 5. **Target attainment** &mdash; catch-up / keep-up and move-up / stay-up
-6. **Questions for the TAC**
+6. **Questions for the TAC** &mdash; the last ~25 minutes
 :::
 
 ::: {.key-insight}
-**`r fmt_count(M$n_growth_cohort_total)`** students received a `r AYL` growth percentile across RICAS (grades 4&ndash;8) and SAT (grade 11), in both cohort-referenced and pre-pandemic baseline-referenced norms.
+**`r fmt_count(M$n_growth_cohort_total)`** students received a `r AYL` growth percentile across RICAS (grades 4&ndash;8) and SAT (grade 11). Results use the student-level file received **`r M$data_received`**.
 :::
 
 ::: {.notes}
-This is a TAC audience &mdash; no SGP primer. Set the arc, then move. All numbers on the slides are generated directly from the LONG data via a cached summary, so they are current as of the latest data run.
+75-minute slot: aim for ~45 minutes of results and ~25&ndash;30 minutes on the four TAC questions. No SGP primer. Goodness-of-fit slides are confirmation &mdash; flip through unless someone wants a plot enlarged. If the Day-1 accountability conversation already covered reporting use, shorten the target-attainment close and go to the questions earlier.
 :::
 
 
@@ -195,7 +198,7 @@ Section one: 2026 results
 Two SGP analyses were conducted on the `r AYL` RICAS data (ELA and Mathematics):
 
 - **Cohort-referenced** &mdash; growth norms built from the most recent cohorts; by construction these center mean/median SGP on **50**.
-- **Baseline-referenced** &mdash; historical (pre-pandemic 2017&ndash;2019) coefficient matrices applied to current data. These are **not** centered on 50 and let us examine COVID-era academic recovery and possible **scale drift**.
+- **Baseline-referenced** &mdash; historical coefficient matrices from the pre-pandemic **2017&ndash;18 and 2018&ndash;19** administrations. These are **not** centered on 50 and let us examine COVID-era academic recovery, changes in rates of learning, and possible **scale drift**.
 - **Projections** (lagged and straight) were calculated using both norm sets.
 
 ::: {.key-insight}
@@ -203,7 +206,7 @@ Cohort norms answer *"how did this student grow relative to academic peers this 
 :::
 
 ::: {.notes}
-Same two-analysis structure as prior years. Emphasize that baseline is the diagnostic lens for recovery / drift.
+Same 2017&ndash;18 / 2018&ndash;19 window as SAT. Some skip-year RICAS matrices also use equated 2015&ndash;17 (PARCC-on-RICAS) priors; the most recent baseline year is 2018&ndash;19 throughout. Baseline is the diagnostic lens for recovery, slower learning, and possible drift.
 :::
 
 
@@ -212,7 +215,7 @@ Same two-analysis structure as prior years. Emphasize that baseline is the diagn
 Two SGP analyses were conducted on the PSAT-10 &rarr; SAT progression (single prior):
 
 - **Cohort-referenced** &mdash; centered on 50 by construction.
-- **Baseline-referenced** &mdash; pre-pandemic (2018&ndash;2019) norms applied to current data.
+- **Baseline-referenced** &mdash; the same pre-pandemic **2017&ndash;18 / 2018&ndash;19** window: PSAT-10 (2018) &rarr; SAT (2019).
 - **No projections** &mdash; SAT (grade 11) is the last tested grade in Rhode Island.
 
 ::: {.theorem-box}
@@ -223,7 +226,7 @@ Grade-11 growth uses one prior (PSAT-10). It is a shorter growth window than the
 :::
 
 ::: {.notes}
-Flag the single-prior caveat now; it matters when we read the SAT baseline numbers.
+Same 2017&ndash;18 / 2018&ndash;19 baseline window as RICAS; SAT is the single-prior PSAT-10 (2018) to SAT (2019) pair. Flag the shorter window; it matters when we read the SAT baseline numbers.
 :::
 
 
@@ -231,7 +234,7 @@ Flag the single-prior caveat now; it matters when we read the SAT baseline numbe
 
 ::: {.columns}
 ::: {.column width="56%"}
-- All analyses used data supplied by the Rhode Island Department of Education.
+- All analyses used student-level data supplied by the Rhode Island Department of Education, **received `r M$data_received`** (a correction to an earlier file affecting several hundred students).
 - Conducted with the **`SGP` R package** (version `r M$sgp_package_version`).
 - All analyses converged; goodness-of-fit plots confirm successful analyses.
 - Source code is public on GitHub:
@@ -249,7 +252,7 @@ This deck is generated from a cached summary of the student-level LONG data. Whe
 :::
 
 ::: {.notes}
-The reproducibility box is new this year &mdash; it previews the "I'll re-run this when the revised file arrives" workflow.
+This is the August 25 file. At reported precision the grade-level 2026 cells match the earlier run; the correction is incorporated.
 :::
 
 
@@ -299,14 +302,14 @@ emit_html(sprintf('
   </thead>
   <tbody>%s</tbody>
 </table>
-<div class="rt-caption">Each cell: mean&#8202;/&#8202;median&#8202;/&#8202;N of student growth percentiles, %s. Cohort norms center on 50 by construction; baseline norms are referenced to pre-pandemic rates of learning.</div>
+<div class="rt-caption">Each cell: mean&#8202;/&#8202;median&#8202;/&#8202;N of student growth percentiles, %s. Cohort norms center on 50 by construction; baseline norms are referenced to pre-pandemic rates of learning. Data received %s.</div>
 ',
 COHORT_COL, COHORT_COL, "#7a5c33", "#7a5c33", BASELINE_COL,
-paste(rows, collapse = "\n"), AYL))
+paste(rows, collapse = "\n"), AYL, M$data_received))
 ```
 
 ::: {.notes}
-Walk the cohort columns first (all ~50, as expected), then the baseline columns &mdash; that is where the story is. The deviations from 50 are what we dig into next.
+Walk the cohort columns first (all ~50, as expected), then the baseline columns &mdash; that is where the story is. The deviations from 50 are what we dig into next. At the reported precision, the August 25 correction does not change these headline cells.
 :::
 
 
@@ -384,7 +387,7 @@ Section two: goodness of fit
 :::
 
 ::: {.notes}
-For a TAC audience this is a fit-confirmation section. Keep it brisk; the plots are click-to-enlarge if anyone wants detail.
+Fit-confirmation only. Budget ~4 minutes for the four GoF slides; click-to-enlarge if anyone wants a panel. Do not linger.
 :::
 
 
@@ -455,7 +458,7 @@ Section three: trends over time
 :::
 
 ::: {.notes}
-The analytic heart of the talk: pandemic recovery vs. scale drift. Slow down here.
+The analytic heart of the talk (~12&ndash;15 minutes). Slow down. The next slides describe a deceleration; they do not diagnose its cause.
 :::
 
 
@@ -466,8 +469,8 @@ The analytic heart of the talk: pandemic recovery vs. scale drift. Slow down her
 Five years on from the onset of the pandemic, we examine **changes in growth over time** to distinguish among:
 
 - **Ripple effects** &mdash; continued downstream impact for students whose early schooling was disrupted.
-- **Scale drift / linking** &mdash; movement in the underlying scale over time.
-- **Real change** in student growth.
+- **Slower (or faster) learning gains** &mdash; a real change in how much students learn, relative to 2017&ndash;19.
+- **Scale drift / linking** &mdash; movement in the underlying scale that can look like a growth change.
 :::
 ::: {.column width="42%"}
 ::: {.theorem-box}
@@ -476,13 +479,13 @@ Two views of the same data
 :::
 **Diagonal** &mdash; follow one cohort as it ages grade-to-grade.
 
-**Vertical** &mdash; hold a grade fixed and watch it move year-to-year (a drift indicator).
+**Vertical** &mdash; hold a grade fixed and watch successive cohorts year-to-year.
 :::
 :::
 :::
 
 ::: {.notes}
-Set up the two reading directions we'll use on the next slides.
+Set up the two reading directions. Vertical is not a drift test; it is a same-grade comparison of successive cohorts. The following slide on mechanisms is the place to say more.
 :::
 
 
@@ -531,12 +534,40 @@ ggplot(tr, aes(x = YEAR_LABEL, y = mean_baseline, color = GRADE, group = GRADE))
   scale_color_brewer(palette = "Dark2", name = "Grade") +
   labs(x = NULL, y = "Mean baseline SGP",
        title = "Baseline-referenced growth by grade, over time",
-       subtitle = "Large year-to-year moves for a fixed grade are consistent with scale drift; 50 = pre-pandemic rate") +
+       subtitle = "Same grade, successive cohorts. A move away from 50 is a change in rate of learning relative to 2017–19 — not yet a diagnosis of why.") +
   theme_ri(20) + theme(legend.position = "right")
 ```
 
 ::: {.notes}
-This is the vertical/drift reading, fully data-driven. Point to grades whose baseline mean swings across years &mdash; those are drift candidates.
+Vertical reading: same grade, successive cohorts. Mathematics grades 4&ndash;6 are the multi-year decline. Do not call this scale drift here &mdash; the next slide says why.
+:::
+
+
+## What a same-grade decline does and does not imply
+
+A drop in mean baseline SGP at a **fixed grade** means successive cohorts at that grade grew more slowly than the 2017&ndash;19 reference. That is a description of the rate of learning, not a diagnosis of its cause.
+
+::: {.columns}
+::: {.column width="48%"}
+**More consistent with slower learning gains**
+
+- A multi-year decline in one subject that the other subject does not share
+- A **diagonal** pattern: the same students decelerate as they age
+:::
+::: {.column width="48%"}
+**More consistent with scale / linking**
+
+- A same-year, same-direction move **across grades** (and often both subjects)
+- A known form or equating change in that year
+:::
+:::
+
+::: {.key-insight}
+Mathematics grades 4&ndash;6 show a multi-year decline that ELA does not share. That pattern does **not** let us prefer scale drift over slower learning &mdash; both remain open, which is the first question for the TAC.
+:::
+
+::: {.notes}
+This is the careful reading. Mathematics 4: 57.6 (2023) to 49.7 (2026); ELA 4 over the same years is flat-to-up. A single program-wide linking event would more often move both subjects, and more grades, in the same year. Subject-specific math scale drift is still possible. Hold the tension; do not resolve it.
 :::
 
 
@@ -551,7 +582,7 @@ gof_grid(vapply(c("2022_2023","2023_2024","2024_2025","2025_2026"),
 ```
 
 ::: {.notes}
-Same grade, four administrations, baseline norms. Consistent shape = stable; systematic drift in the bands = a linking/scale concern.
+Same grade, four administrations, baseline norms. Consistent shape = the quantile regression still fits; a level shift is a change in the rate of learning, not misfit. Advance unless someone wants a panel enlarged.
 :::
 
 
@@ -748,12 +779,12 @@ Numbers pull from the high-need contrast in the cache. This frames the accountab
 
 - **Cohort-referenced SGPs** show excellent model fit across RICAS and SAT &mdash; suitable for accountability calculations.
 - **Baseline-referenced SGPs** are uneven: some grade/content pairs sit above pre-pandemic rates of learning, others below.
-- **Trend analysis** (same-grade-over-time and diagonal-cohort) shows changes that are difficult to attribute to a single mechanism &mdash; recovery, cohort composition, and scale drift all remain in play.
-- **Continued equating / linking effects over time cannot be ruled out** as a contributor to the baseline movement.
+- **A same-grade decline is a change in the rate of learning** relative to 2017&ndash;19. It does not, by itself, distinguish slower learning gains from scale drift or cohort composition.
+- **The 2022&ndash;26 pattern is mixed** (mathematics grades 4&ndash;6 decline; ELA does not share that path). Equating / linking effects cannot be ruled out, and neither can slower learning.
 - **Equity and target-attainment** results locate the recovery challenge primarily in catch-up for the lowest-prior-achievement students.
 
 ::: {.notes}
-Land the honest bottom line: cohort norms are solid; baseline movement is real but multiply-determined, and drift is not ruled out.
+Land the honest bottom line: cohort norms are solid; baseline movement is real and multiply-determined. Do not prefer scale drift over slower learning.
 :::
 
 
@@ -764,13 +795,13 @@ Land the honest bottom line: cohort norms are solid; baseline movement is real b
 We would value the committee's guidance on
 :::
 1. **Disentangling mechanisms.** What additional analyses would help separate pandemic ripple effects, scale drift, and genuine changes in student growth over time?
-2. **Baseline norm maintenance.** If baseline SGPs continue going forward, should Rhode Island **re-establish baseline norms** (moving off the pre-pandemic 2017&ndash;2019 reference) &mdash; and on what cadence?
+2. **Baseline norm maintenance.** If baseline SGPs continue going forward, should Rhode Island **re-establish baseline norms** (moving off the pre-pandemic 2017&ndash;18 / 2018&ndash;19 reference) &mdash; and on what cadence?
 3. **Form effects.** Would examining cohort-referenced growth **by form** (potentially leveraging MA data) be a productive way to probe linking/form effects? Is that something MA would be interested in pursuing?
 4. **Accountability use.** Given the baseline unevenness, are there guardrails the TAC would recommend for interpreting baseline-referenced growth in public reporting?
 :::
 
 ::: {.notes}
-This is the discussion slide &mdash; leave it up and open the floor. These carry forward last year's open questions and add the reporting-guardrails item.
+Leave this up and open the floor. Budget ~25 minutes. Question 1 is the mechanism question the trend section teed up. Question 4 (accountability) can be shortened if Day 1 already covered reporting use.
 :::
 
 

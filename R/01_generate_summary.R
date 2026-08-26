@@ -32,6 +32,7 @@ LONG_DATA_PATH <- Sys.getenv(
   "/Users/conet/GitHub/CenterForAssessment/Rhode_Island/master/Data/Rhode_Island_SGP_LONG_Data.Rdata"
 )
 ANALYSIS_YEAR <- Sys.getenv("RI_ANALYSIS_YEAR", "")  # "" => use latest year in data
+DATA_RECEIVED <- Sys.getenv("RI_DATA_RECEIVED", "August 25, 2026")
 CACHE_PATH    <- file.path(PROJECT_ROOT, "summary", "ri_sgp_summary.rds")
 
 FORCE <- any(commandArgs(trailingOnly = TRUE) %in% c("--force", "-f"))
@@ -80,6 +81,7 @@ g <- d[VALID_CASE == "VALID_CASE" & CONTENT_AREA %in% GROWTH_CONTENT_AREAS]
 ## Recode subgroup labels
 g[, ETHNICITY := recode_ethnicity(ETHNICITY)]
 g[, IEP_STATUS := clean_iep(IEP_STATUS)]
+g[, ELL_STATUS := clean_ell(ELL_STATUS)]
 g[, GENDER := clean_gender(GENDER)]
 g[, HIGH_NEED_STATUS := fcase(
   grepl("Below 25", HIGH_NEED_STATUS), "Prior Achievement < 25th %ile",
@@ -217,6 +219,7 @@ meta <- list(
   sgp_package_version = sgp_version,
   source_file     = LONG_DATA_PATH,
   source_mtime    = file.mtime(LONG_DATA_PATH),
+  data_received   = DATA_RECEIVED,
   generated_at    = Sys.time()
 )
 

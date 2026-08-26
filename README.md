@@ -62,6 +62,7 @@ working copy and can be overridden:
 ```bash
 RI_LONG_DATA="/path/to/Rhode_Island_SGP_LONG_Data.Rdata" \
 RI_GOF_ROOT="/path/to/Goodness_of_Fit" \
+RI_DATA_RECEIVED="August 25, 2026" \
 ./render.sh --force
 ```
 
