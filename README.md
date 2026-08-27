@@ -126,8 +126,41 @@ styles/                             reveal.js theme + figure lightbox
 assets/fonts/                       math font
 ```
 
+## The PSTricks schematic
+
+`Figures/PSTricks/sgp_cdf_identity.tex` draws the figure on the "One statistic,
+with and without conditioning" slide, which shows that the cross-sectional
+comparison is the baseline SGP with the prior-score conditioning removed. Build
+it with:
+
+```bash
+cd Figures/PSTricks && Rscript build_pstricks.R
+```
+
+The chain follows the house pattern (`latex` → `dvips` → `gs` → `pdfcrop` →
+`pdf2svg`), writing `Figures/sgp_cdf_identity.{pdf,svg}`. Four things about it
+are load-bearing and easy to trip over again:
+
+- `algebraic` plotting comes from **pstricks-add**, not `pst-plot`. Without it
+  the expression is passed through as raw PostScript and the page silently
+  renders blank.
+- `pst-algparser` maps `exp()` onto PostScript's *two-operand power* operator,
+  so the natural exponential is **`EXP()`**; its trig functions take **radians**.
+- The `pspicture` box reserves its own vertical space — adding `\vspace` pushes
+  the figure off the page.
+- `opacity` does not survive `dvips` → `gs pdfwrite`, so translucent fills are
+  written as explicit pale colours.
+
+Because `dvips -E` cannot measure PostScript specials it returns a degenerate
+BoundingBox, so the figure is drawn on a generous canvas and cropped to its real
+ink by `pdfcrop` rather than by a hard-coded box. A PostScript error still yields
+a valid but *blank* PDF, so the build treats any Ghostscript diagnostic as a
+failure instead of shipping an empty figure.
+
 ## Requirements
 
 - [Quarto](https://quarto.org) ≥ 1.4
 - R with `data.table`, `ggplot2`, `scales`, and the `SGP` package (for the
   reported package version)
+- For the PSTricks figure only: a TeX distribution providing `latex`, `dvips`,
+  `pstricks-add` and `pdfcrop`, plus `ghostscript` and `pdf2svg`

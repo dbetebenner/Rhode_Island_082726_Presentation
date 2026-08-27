@@ -1,0 +1,163 @@
+%%%%
+%%%% sgp_cdf_identity.tex -- PSTricks schematic for the RIDE TAC deck.
+%%%%
+%%%% Shows that the cross-sectional CDF comparison of Ho (2009) is the
+%%%% zero-covariate case of the baseline SGP:
+%%%%
+%%%%   A. Condition on the prior score -> baseline SGP        F_b(y | x)
+%%%%   B. Drop the conditioning        -> marginal percentile F_b(y)
+%%%%   C. Average over the cohort      -> AUC = P(Y_b < Y_c), the area
+%%%%                                     ABOVE the PP curve
+%%%%
+%%%% Build notes (see build_pstricks.R in this directory):
+%%%%   * `algebraic` plotting lives in pstricks-add, not pst-plot.
+%%%%   * pst-algparser maps exp() to PostScript's two-operand power operator;
+%%%%     EXP() is the natural exponential. Its trig functions take RADIANS.
+%%%%   * The pspicture box reserves its own vertical space -- no \vspace.
+%%%%   * `opacity` does not survive the dvips -> gs pdfwrite chain, so
+%%%%     translucent fills are expressed as explicit pale colours.
+%%%%
+\documentclass[10pt]{article}
+\usepackage[svgnames,usenames,dvips]{xcolor}
+%% Generous canvas: the build crops to the actual ink via Ghostscript's bbox
+%% device, so the page size only has to be large enough.
+\usepackage[paperwidth=17in,paperheight=8in,margin=0in]{geometry}
+\setlength{\parindent}{0pt}
+\usepackage{pstricks,pst-plot,pst-node,pstricks-add}
+\usepackage[OT1]{fontenc}
+\usepackage[onlymath]{sansmathfonts}
+\usepackage{type1cm}
+
+%%% Palette aligned with the deck (Rhode_Island_2026_SGP_Results.qmd)
+\definecolor{normPeriod}{HTML}{E67E22}      % baseline / norm-period reference
+\definecolor{normPeriodPale}{HTML}{F4C59C}
+\definecolor{normPeriodFill}{HTML}{F9DCC1}
+\definecolor{currentYr}{HTML}{3498DB}       % current-year cohort
+\definecolor{currentYrFill}{HTML}{C4E0F5}
+\definecolor{inkDark}{HTML}{141410}
+\definecolor{bodyGrey}{gray}{0.34}
+\definecolor{borderGrey}{gray}{0.78}
+\definecolor{fillGrey}{gray}{0.965}
+
+\pagestyle{empty}
+\begin{document}
+\noindent
+\psset{xunit=1in,yunit=1in,linejoin=1}
+\begin{pspicture}(0,-0.10)(14.60,4.95)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Panel headers
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\rput[bl](0.50,4.58){\textsf{\bfseries\large A.\ \ Condition on the prior score}}
+\rput[bl](0.50,4.33){\textsf{\small\textcolor{bodyGrey}{This is the baseline SGP}}}
+
+\rput[bl](6.40,4.58){\textsf{\bfseries\large B.\ \ Drop the conditioning}}
+\rput[bl](6.40,4.33){\textsf{\small\textcolor{bodyGrey}{One marginal distribution}}}
+
+\rput[bl](11.00,4.58){\textsf{\bfseries\large C.\ \ Average over the cohort}}
+\rput[bl](11.00,4.33){\textsf{\small\textcolor{bodyGrey}{This is Ho's comparison}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL A -- the norm-period conditional distributions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\psframe[linecolor=borderGrey,fillstyle=solid,fillcolor=fillGrey,linewidth=0.6pt](0.50,1.05)(4.30,4.18)
+
+%% conditional-mean trend through the norm period
+\psline[linecolor=normPeriodPale,linewidth=1.3pt,linestyle=dashed,dash=4pt 2.5pt](0.95,1.72)(3.85,3.57)
+
+%% three unhighlighted conditional distributions
+\psline[linecolor=normPeriodPale,linewidth=0.5pt](1.40,1.3831)(1.40,2.6311)
+\parametricplot[algebraic,linecolor=normPeriodPale,linewidth=1.0pt]{-2.4}{2.4}{1.40+0.52*EXP(0-(t^2)/2) | 2.0071+0.26*t}
+\psline[linecolor=normPeriodPale,linewidth=0.5pt](2.90,2.3399)(2.90,3.5879)
+\parametricplot[algebraic,linecolor=normPeriodPale,linewidth=1.0pt]{-2.4}{2.4}{2.90+0.52*EXP(0-(t^2)/2) | 2.9639+0.26*t}
+\psline[linecolor=normPeriodPale,linewidth=0.5pt](3.65,2.8182)(3.65,4.0662)
+\parametricplot[algebraic,linecolor=normPeriodPale,linewidth=1.0pt]{-2.4}{2.4}{3.65+0.52*EXP(0-(t^2)/2) | 3.4422+0.26*t}
+
+%% the student's own conditional distribution, with the lower tail shaded
+\pscustom[fillstyle=solid,fillcolor=normPeriodFill,linestyle=none]{%
+  \parametricplot[algebraic]{-2.4}{1.0558}{2.15+0.52*EXP(0-(t^2)/2) | 2.4855+0.26*t}%
+  \psline(2.15,2.7600)(2.15,1.8615)%
+  \closepath}
+\parametricplot[algebraic,linecolor=normPeriod,linewidth=1.5pt]{-2.4}{2.4}{2.15+0.52*EXP(0-(t^2)/2) | 2.4855+0.26*t}
+\psline[linecolor=normPeriod,linewidth=0.8pt](2.15,1.8615)(2.15,3.1095)
+
+%% the student
+\psline[linecolor=inkDark,linewidth=0.6pt,linestyle=dotted,dotsep=1.3pt](0.68,2.7600)(2.15,2.7600)
+\psline[linecolor=inkDark,linewidth=0.6pt,linestyle=dotted,dotsep=1.3pt](2.15,1.15)(2.15,1.8615)
+\psdots[dotsize=6.5pt,linecolor=inkDark](2.15,2.7600)
+\rput[r](2.06,2.8700){\textsf{\footnotesize $y_i$}}
+\rput[t](2.15,1.11){\textsf{\footnotesize $x_i$}}
+
+\rput[b]{90}(0.32,2.55){\textsf{\small Current score}}
+\rput[t](2.40,0.95){\textsf{\small Prior score}}
+\rput[l](0.68,3.94){\textsf{\footnotesize\textcolor{bodyGrey}{Norm-period distribution of the current}}}
+\rput[l](0.68,3.75){\textsf{\footnotesize\textcolor{bodyGrey}{score, \emph{at each} prior score}}}
+\rput[bl](0.68,1.22){\psframebox*[framesep=1.5pt]{\textsf{\small Shaded $=\ F_b(y_i \mid x_i)$}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Arrow A -> B
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\psline[linecolor=bodyGrey,linewidth=1.4pt,arrowsize=5.5pt 1.5]{->}(4.55,2.62)(5.75,2.62)
+\rput[b](5.15,2.94){\textsf{\small average over}}
+\rput[b](5.15,2.74){\textsf{\small the prior}}
+\rput[t](5.15,2.44){\textsf{\footnotesize $F_b(y)=\mathrm{E}_X\!\left[F_b(y \mid X)\right]$}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL B -- the single norm-period marginal
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\psframe[linecolor=borderGrey,fillstyle=solid,fillcolor=fillGrey,linewidth=0.6pt](6.40,1.05)(8.90,4.18)
+
+\pscustom[fillstyle=solid,fillcolor=normPeriodFill,linestyle=none]{%
+  \parametricplot[algebraic]{-2.6}{0.4615}{6.90+0.72*EXP(0-(t^2)/2) | 2.5200+0.52*t}%
+  \psline(6.90,2.7600)(6.90,1.1680)%
+  \closepath}
+\parametricplot[algebraic,linecolor=normPeriod,linewidth=1.5pt]{-2.6}{2.6}{6.90+0.72*EXP(0-(t^2)/2) | 2.5200+0.52*t}
+\psline[linecolor=normPeriod,linewidth=0.8pt](6.90,1.1680)(6.90,3.8720)
+
+\psline[linecolor=inkDark,linewidth=0.6pt,linestyle=dotted,dotsep=1.3pt](6.58,2.7600)(7.62,2.7600)
+\psdots[dotsize=6.5pt,linecolor=inkDark](6.90,2.7600)
+\rput[l](7.72,2.7600){\textsf{\footnotesize $y_i$}}
+
+\rput[b]{90}(6.18,2.55){\textsf{\small Current score}}
+\rput[l](6.58,3.94){\textsf{\footnotesize\textcolor{bodyGrey}{Norm-period distribution of the}}}
+\rput[l](6.58,3.75){\textsf{\footnotesize\textcolor{bodyGrey}{current score, prior ignored}}}
+\rput[bl](7.10,1.20){\psframebox*[framesep=1.5pt]{\textsf{\small Shaded $=\ F_b(y_i)$}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Arrow B -> C
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\psline[linecolor=bodyGrey,linewidth=1.4pt,arrowsize=5.5pt 1.5]{->}(9.15,2.62)(10.35,2.62)
+\rput[b](9.75,2.94){\textsf{\small average over}}
+\rput[b](9.75,2.74){\textsf{\small the cohort}}
+\rput[t](9.75,2.44){\textsf{\footnotesize $\mathrm{E}\!\left[F_b(Y_c)\right]$}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL C -- the PP plot; AUC is the area ABOVE the curve
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\psframe[linecolor=borderGrey,fillstyle=solid,fillcolor=fillGrey,linewidth=0.6pt](11.00,1.05)(14.30,4.18)
+
+\pscustom[fillstyle=solid,fillcolor=currentYrFill,linestyle=none]{%
+  \psplot[algebraic]{11.00}{14.30}{1.18+2.86*(((x-11.00)/3.30)+0.16*sin(3.14159265*((x-11.00)/3.30)))}%
+  \psline(14.30,4.04)(11.00,4.04)%
+  \closepath}
+\psline[linecolor=bodyGrey,linewidth=0.7pt,linestyle=dashed,dash=3.5pt 2.5pt](11.00,1.18)(14.30,4.04)
+\psplot[algebraic,linecolor=currentYr,linewidth=1.6pt]{11.00}{14.30}{1.18+2.86*(((x-11.00)/3.30)+0.16*sin(3.14159265*((x-11.00)/3.30)))}
+
+\rput(11.95,3.72){\textsf{\bfseries\normalsize AUC}}
+\rput[l](13.32,3.02){\textsf{\footnotesize\textcolor{bodyGrey}{PP curve}}}
+\rput[l](12.52,2.00){\textsf{\footnotesize\textcolor{bodyGrey}{45$^\circ$}}}
+\rput[t](12.65,0.95){\textsf{\small Norm-period percentile}}
+\rput[b]{90}(10.78,2.55){\textsf{\small Current-year percentile}}
+\rput[bl](11.18,1.22){\psframebox*[framesep=1.5pt]{\textsf{\small Shaded $=$ area \emph{above} the curve}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The identity
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\psline[linecolor=borderGrey,linewidth=0.6pt](0.50,0.70)(14.30,0.70)
+\rput[l](0.50,0.36){\textsf{\normalsize
+  $\mathrm{E}\!\left[F_b(Y_c)\right]\ =\ \Pr\!\left(Y_b < Y_c\right)\ =\ \mathrm{AUC}$}}
+\rput[l](6.40,0.36){\textsf{\normalsize $V=\sqrt{2}\,\Phi^{-1}(\mathrm{AUC})$}}
+\rput[l](11.00,0.36){\textsf{\small\textcolor{bodyGrey}{A conditions on the prior. B and C do not.}}}
+
+\end{pspicture}
+\end{document}

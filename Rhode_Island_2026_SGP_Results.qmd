@@ -688,6 +688,30 @@ This is the conceptual pivot of the revision, and it is worth being precise abou
 :::
 
 
+## One statistic, with and without conditioning
+
+```{r cdf-identity-figure}
+#| output: asis
+emit_html('<figure style="margin:0 0 0.15em 0;text-align:center">
+  <img src="Figures/sgp_cdf_identity.svg"
+       alt="Three panels. A: the norm-period distribution of the current score at each prior score, with the lower tail below one student\'s score shaded - the baseline SGP. B: those conditional distributions averaged over the prior into a single marginal distribution, with the area below the same student\'s score shaded. C: the probability-probability plot, with the area above the curve shaded and labelled AUC. Below: the expectation of F_b(Y_c) equals the probability that Y_b is less than Y_c, which equals AUC, and V equals root two times the inverse normal of AUC."
+       style="width:100%;height:auto"/>
+</figure>')
+```
+
+::: {.key-insight}
+**A** is the baseline SGP. **B** is the same quantity with the prior dropped. **C** averages **B** over the cohort &mdash; and lands exactly on the Mann&ndash;Whitney statistic behind Ho's $V$. The cross-sectional comparison is not a rival to the baseline SGP; it is the **zero-covariate case** of it.
+:::
+
+::: {.notes}
+Walk the three panels rather than the algebra. Panel A: a baseline SGP asks where a student sits in the norm-period distribution of students who started where they started. Panel B: erase the prior and the family of conditional distributions collapses into one marginal; the same student now has an unconditional percentile. Panel C: average that over the cohort and you have the probability that a randomly drawn current-year student outscores a randomly drawn norm-period student, which is Ho's statistic, and geometrically it is the area above the PP curve on the previous slide.
+
+Both halves of this were checked against the 2026 data rather than asserted. For ELA grade 6 the mean unconditional baseline percentile is 43.01 and the AUC computed from the two distributions is 43.01. The area above the fitted PP curve reproduces the AUC in all ten RICAS grade-by-subject cells to a tenth of a point.
+
+The payoff is the division of labour. Conditioning buys removal of the largest single source of cohort composition change, prior achievement; it costs a quantile-regression model and it inherits any drift in the PRIOR year's scale. Dropping the conditioning assumes nothing and inherits nothing, but confounds composition with scale with learning. Neither identifies drift on its own, which is exactly why this deck now reports both.
+:::
+
+
 ## The same grades, measured both ways
 
 ```{r context-joint}
