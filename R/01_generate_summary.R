@@ -169,8 +169,12 @@ target_rates <- function(dt, status_col, by) {
   x <- dt[!is.na(get(status_col)), .(status = get(status_col)), by = by]
   x[, aspiration := sub(":.*$", "", status)]        # "Catch Up" / "Keep Up"
   x[, attained := grepl("Yes$", status)]
-  x[, .(n = .N, attained = sum(attained)),
-    by = c(by, "aspiration")][, rate := 100 * attained / n][]
+  out <- x[, .(n = .N, attained = sum(attained)), by = c(by, "aspiration")]
+  out[, rate := 100 * attained / n]
+  ## Denominators and intervals requested by the TAC: bare percentages are
+  ## quotable but unfalsifiable.
+  out[, c("rate_lo", "rate_hi") := wilson_ci(attained, n)]
+  out[]
 }
 
 cuku_overall <- target_rates(gy, "CATCH_UP_KEEP_UP_STATUS_3_YEAR",
@@ -187,12 +191,108 @@ musu_overall[, `:=`(NORM = "Cohort", METRIC = "Move Up / Stay Up")]
 
 targets <- rbind(cuku_overall, cuku_baseline, musu_overall, use.names = TRUE, fill = TRUE)
 
+## The catch-up/keep-up target horizon is NOT constant across grades: the
+## projection runs to the end of the tested progression, so grade 4 is judged
+## over three years while grade 8 has none left. Carrying the horizon lets the
+## deck report it, which is what makes the grade series comparable at all.
+target_horizon <- gy[!is.na(CATCH_UP_KEEP_UP_STATUS_3_YEAR) &
+                     !is.na(SGP_TARGET_3_YEAR_NUM_YEARS_TO_TARGET),
+  .(years_to_target = as.numeric(stats::median(SGP_TARGET_3_YEAR_NUM_YEARS_TO_TARGET))),
+  by = .(ASSESSMENT, SUBJECT, GRADE_LABEL)]
+targets <- merge(targets, target_horizon,
+                 by = c("ASSESSMENT", "SUBJECT", "GRADE_LABEL"), all.x = TRUE)
+
 ## Catch-up/keep-up by high-need status (equity contrast)
 cuku_highneed <- target_rates(
   gy[!is.na(HIGH_NEED_STATUS)], "CATCH_UP_KEEP_UP_STATUS_3_YEAR",
   by = c("ASSESSMENT", "HIGH_NEED_STATUS")
 )
 cuku_highneed[, `:=`(NORM = "Cohort", METRIC = "Catch Up / Keep Up")]
+
+## ---------------------------------------------------------------------------
+## proficiency: cross-sectional status by content x grade x year
+## ---------------------------------------------------------------------------
+
+proficiency <- g[!is.na(ACHIEVEMENT_LEVEL),
+  .(pct_proficient = 100 * mean(ACHIEVEMENT_LEVEL %in% PROFICIENT_LEVELS),
+    n = .N),
+  by = .(CONTENT_AREA, SUBJECT, ASSESSMENT, GRADE, GRADE_LABEL, YEAR)]
+proficiency[, YEAR_LABEL := pretty_year(YEAR)]
+setorder(proficiency, ASSESSMENT, SUBJECT, GRADE, YEAR)
+
+## ---------------------------------------------------------------------------
+## xsec: cross-sectional comparison against the baseline norm period
+##
+## Requested by the TAC (August 2026): baseline-referenced growth should be
+## presented in the context of cross-sectional results from the norm period.
+## See the Ho (2009) note in 00_helpers.R for the statistics.
+## ---------------------------------------------------------------------------
+
+xsec_cells <- unique(g[!is.na(SCALE_SCORE) & YEAR >= BASELINE_NORM_YEAR,
+                       .(CONTENT_AREA, GRADE, YEAR)])
+
+xsec_one <- function(ca, gr, yy) {
+  base <- g[CONTENT_AREA == ca & GRADE == gr & YEAR == BASELINE_NORM_YEAR, SCALE_SCORE]
+  cur  <- g[CONTENT_AREA == ca & GRADE == gr & YEAR == yy, SCALE_SCORE]
+  a <- auc_stat(cur, base)
+  data.table(CONTENT_AREA = ca, GRADE = gr, YEAR = yy,
+             auc = 100 * a, V = ho_v(a),
+             n_current = sum(!is.na(cur)), n_norm = sum(!is.na(base)))
+}
+
+xsec <- rbindlist(Map(xsec_one, xsec_cells$CONTENT_AREA,
+                                xsec_cells$GRADE, xsec_cells$YEAR))
+xsec <- xsec[!is.na(auc)]
+xsec[, `:=`(SUBJECT     = pretty_subject(CONTENT_AREA),
+            ASSESSMENT  = assessment_of(CONTENT_AREA),
+            GRADE_LABEL = pretty_grade(GRADE, CONTENT_AREA),
+            YEAR_LABEL  = pretty_year(YEAR))]
+setorder(xsec, ASSESSMENT, SUBJECT, GRADE, YEAR)
+
+## ---------------------------------------------------------------------------
+## pp: PP-plot curves, analysis year vs the baseline norm period
+## ---------------------------------------------------------------------------
+
+pp_cells <- unique(g[YEAR == ANALYSIS_YEAR & !is.na(SCALE_SCORE), .(CONTENT_AREA, GRADE)])
+
+pp_one <- function(ca, gr) {
+  base <- g[CONTENT_AREA == ca & GRADE == gr & YEAR == BASELINE_NORM_YEAR, SCALE_SCORE]
+  cur  <- g[CONTENT_AREA == ca & GRADE == gr & YEAR == ANALYSIS_YEAR, SCALE_SCORE]
+  out <- pp_curve(cur, base)
+  if (!nrow(out)) return(NULL)
+  out[, `:=`(CONTENT_AREA = ca, GRADE = gr)]
+  out[]
+}
+
+pp <- rbindlist(Map(pp_one, pp_cells$CONTENT_AREA, pp_cells$GRADE), use.names = TRUE)
+if (nrow(pp)) {
+  pp[, `:=`(SUBJECT     = pretty_subject(CONTENT_AREA),
+            ASSESSMENT  = assessment_of(CONTENT_AREA),
+            GRADE_LABEL = pretty_grade(GRADE, CONTENT_AREA))]
+}
+
+## ---------------------------------------------------------------------------
+## sgp_distribution: full SGP distribution by decile (analysis year)
+##
+## Requested by the TAC: growth percentiles are constructed to be roughly
+## uniform in the reference population, so the SHAPE of a baseline
+## distribution is itself diagnostic. Summary statistics hide it.
+## ---------------------------------------------------------------------------
+
+dist_one <- function(col, norm_label) {
+  x <- g[YEAR == ANALYSIS_YEAR & !is.na(get(col))]
+  out <- x[, .(n = .N),
+           by = .(CONTENT_AREA, SUBJECT, ASSESSMENT, GRADE, GRADE_LABEL,
+                  DECILE = pmin(9L, as.integer(get(col)) %/% 10L))]
+  out[, NORM := norm_label]
+  out
+}
+
+sgp_distribution <- rbind(dist_one("SGP", "Cohort"),
+                          dist_one("SGP_BASELINE", "Baseline"))
+sgp_distribution[, pct := 100 * n / sum(n),
+                 by = .(CONTENT_AREA, GRADE_LABEL, NORM)]
+setorder(sgp_distribution, ASSESSMENT, SUBJECT, GRADE, NORM, DECILE)
 
 ## ---------------------------------------------------------------------------
 ## meta
@@ -220,6 +320,7 @@ meta <- list(
   source_file     = LONG_DATA_PATH,
   source_mtime    = file.mtime(LONG_DATA_PATH),
   data_received   = DATA_RECEIVED,
+  baseline_norm_year = BASELINE_NORM_YEAR,
   generated_at    = Sys.time()
 )
 
@@ -234,7 +335,12 @@ summary_list <- list(
   subgroups     = subgroups,
   subgroups_pooled = subgroups_pooled,
   targets       = targets,
-  targets_highneed = cuku_highneed
+  targets_highneed = cuku_highneed,
+  ## --- added in the August 2026 TAC revision ---
+  proficiency      = proficiency,
+  xsec             = xsec,
+  pp               = pp,
+  sgp_distribution = sgp_distribution
 )
 
 dir.create(dirname(CACHE_PATH), showWarnings = FALSE, recursive = TRUE)

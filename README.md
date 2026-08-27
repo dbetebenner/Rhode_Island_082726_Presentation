@@ -6,6 +6,25 @@ for the RIDE Technical Advisory Committee. Covers cohort- and baseline-reference
 growth, goodness of fit, multi-year trends (pandemic recovery / scale drift),
 growth by student group, and catch-up/keep-up target attainment.
 
+**Revision 2 (August 27, 2026)** incorporates written feedback from the TAC. The
+deck is a living document: because every number derives from the analysis
+pipeline, validated feedback that changes an analysis changes the deck by
+rebuilding it rather than editing it. The substantive changes in this revision:
+
+- Baseline-referenced growth is now read alongside **cross-sectional results
+  from the norm period**, following Ho (2009). This reverses the reading of the
+  mathematics trend: status has recovered to pre-pandemic levels, so the falling
+  baseline SGP is rebound growth fading rather than a decline in learning. ELA,
+  which is down on both measures, becomes the headline concern.
+- **Grade-11 baseline SGPs are recommended for withholding** from public
+  reporting. They contradict every cross-sectional measurement of the same
+  cohort and pile up at the ceiling of the distribution.
+- The goodness-of-fit section is reframed as **model fit and conditional
+  coverage**, stating what the plots do and do not diagnose given a discrete scale.
+- Catch-up/keep-up now reports its **target horizon** (three years at grade 4
+  down to none at grade 8), denominators, and Wilson intervals.
+- Standard deviations accompany every group mean.
+
 ## Present it
 
 Open **`docs/index.html`** in any browser (self-contained, works offline). The
@@ -80,6 +99,17 @@ RI_DATA_RECEIVED="August 25, 2026" \
 | `subgroups_pooled` | Analysis-year subgroup means/medians pooled across grades (true medians) |
 | `targets` | Catch-up/keep-up & move-up/stay-up attainment by grade |
 | `targets_highneed` | Catch-up/keep-up attainment by prior-achievement (high-need) status |
+| `proficiency` | Percent proficient by content area × grade × year (cross-sectional status) |
+| `xsec` | Distributional comparison against the baseline norm year: `auc` = P(Y<sub>current</sub> > Y<sub>norm</sub>) and Ho's scale-invariant `V` |
+| `pp` | Probability–probability curve coordinates, analysis year vs the norm year |
+| `sgp_distribution` | Full cohort and baseline SGP distributions by decile |
+
+`xsec` and `pp` implement the nonparametric comparison of Ho, A. D. (2009),
+*A nonparametric framework for comparing trends and gaps across tests*,
+Journal of Educational and Behavioral Statistics, 34, 201–228. Note that `auc`
+is exactly the mean **unconditional** baseline percentile — the baseline SGP with
+the prior-score conditioning removed — which is what makes the conditional and
+cross-sectional series directly comparable.
 
 ## Files
 

@@ -1,6 +1,6 @@
 ---
 title: "Rhode Island 2026 SGP Analyses"
-subtitle: "RICAS & SAT Student Growth Percentile Results"
+subtitle: "RICAS & SAT Student Growth Percentile Results<br/><span class='revision-badge'>Revision 2 &middot; revised following TAC feedback</span>"
 author:
   - name: "Damian W. Betebenner"
     affiliation: "National Center for the Improvement of Educational Assessment"
@@ -33,6 +33,27 @@ format:
               src: url("assets/fonts/NotoSansMath.woff2") format("woff2");
               font-display: swap;
             }
+            .revision-badge {
+              display: inline-block;
+              margin-top: 0.6em;
+              padding: 0.18em 0.7em;
+              border: 1px solid currentColor;
+              border-radius: 2em;
+              font-size: 0.5em;
+              letter-spacing: 0.04em;
+              text-transform: uppercase;
+              opacity: 0.85;
+            }
+            .tac-tag {
+              display: inline-block;
+              font-size: 0.62em;
+              letter-spacing: 0.03em;
+              text-transform: uppercase;
+              color: #7a5c33;
+              border-left: 3px solid #E67E22;
+              padding-left: 0.5em;
+              margin-bottom: 0.35em;
+            }
           </style>
     include-after-body:
       - text: |
@@ -64,7 +85,14 @@ sg  <- as.data.table(S$subgroups)
 sgp_pool <- as.data.table(S$subgroups_pooled)
 tg  <- as.data.table(S$targets)
 tgh <- as.data.table(S$targets_highneed)
+## Added in the TAC revision
+xsec <- as.data.table(S$xsec)
+ppc  <- as.data.table(S$pp)
+prof <- as.data.table(S$proficiency)
+sgpd <- as.data.table(S$sgp_distribution)
 M   <- S$meta
+BNY <- if (!is.null(M$baseline_norm_year)) M$baseline_norm_year else "2018_2019"
+BNYL <- pretty_year(BNY)
 
 AY  <- M$analysis_year          # "2025_2026"
 AYL <- M$analysis_year_label    # "2026"
@@ -101,6 +129,28 @@ mmn_cell <- function(content, grade_label, norm = c("cohort", "baseline"), year 
   if (!nrow(r) || (norm == "cohort" && r$n_cohort == 0)) return("&mdash;")
   if (norm == "cohort") fmt_mmn(r$mean_cohort, r$median_cohort, r$n_cohort)
   else fmt_mmn(r$mean_baseline, r$median_baseline, r$n_baseline)
+}
+
+## Cross-sectional (unconditional) status value for a content area x grade x year
+xs_val <- function(content, grade, col = "auc", year = AY) {
+  r <- xsec[CONTENT_AREA == content & GRADE == grade & YEAR == year]
+  if (!nrow(r)) return(NA_real_)
+  r[[col]]
+}
+
+## Percent proficient for a content area x grade x year
+prof_val <- function(content, grade, year = AY) {
+  r <- prof[CONTENT_AREA == content & GRADE == grade & YEAR == year]
+  if (!nrow(r)) return(NA_real_)
+  r$pct_proficient
+}
+
+## mean/median/SD/N cell (SDs added at the committee's request)
+fmt_mmsn <- function(mean_val, median_val, sd_val, n) {
+  paste0(formatC(round(mean_val, 1), format = "f", digits = 1), "/",
+         formatC(round(median_val, 0), format = "d"), "/",
+         formatC(round(sd_val, 1), format = "f", digits = 1), "/",
+         fmt_count(n))
 }
 
 get_val <- function(content, grade_label, col, year = AY) {
@@ -171,10 +221,11 @@ Roadmap for the talk
 ::: {style="font-size: 1.05em;"}
 1. **What was run** &mdash; RICAS and PSAT/SAT analyses, cohort and baseline
 2. **2026 results** &mdash; overall growth and model fit
-3. **Trends over time** &mdash; pandemic recovery, slower learning, and possible scale drift
-4. **Growth equity** &mdash; results by student group
-5. **Target attainment** &mdash; catch-up / keep-up and move-up / stay-up
-6. **Questions for the TAC** &mdash; the last ~25 minutes
+3. **Growth in context** &mdash; baseline growth read against the norm period
+4. **Grade 11** &mdash; why the baseline results are withdrawn
+5. **Growth equity** &mdash; results by student group
+6. **Target attainment** &mdash; catch-up / keep-up, and what the target actually is
+7. **Questions for the TAC**
 :::
 
 ::: {.key-insight}
@@ -182,7 +233,42 @@ Roadmap for the talk
 :::
 
 ::: {.notes}
-75-minute slot: aim for ~45 minutes of results and ~25&ndash;30 minutes on the four TAC questions. No SGP primer. Goodness-of-fit slides are confirmation &mdash; flip through unless someone wants a plot enlarged. If the Day-1 accountability conversation already covered reporting use, shorten the target-attainment close and go to the questions earlier.
+Revision 2. This version is organised around the committee's written feedback rather than the original results-first order. The substantive change is section 3: baseline growth is now presented next to cross-sectional results from the norm period, which changes how the mathematics trend should be read. Section 4 is new and is the strongest recommendation in the deck. Model-fit slides are confirmation &mdash; flip through unless someone wants a plot enlarged.
+:::
+
+
+## This revision {.smaller}
+
+::: {.key-insight-box}
+::: {.key-insight-box-title}
+Revision 2 &mdash; revised following Technical Advisory Committee feedback
+:::
+This deck is a living document. It regenerates from the analysis pipeline, so
+feedback that changes an analysis changes every number that depends on it. The
+changes below originate in written comments returned by the committee.
+:::
+
+::: {.columns}
+::: {.column width="49%"}
+**What changed**
+
+- Baseline growth is now read **alongside cross-sectional results from the norm period**, following Ho (2009). This changes the reading of the mathematics trend.
+- The **grade-11 baseline results are withdrawn** from reporting pending the SAT linking question.
+- **Model fit** is reframed as conditional coverage, with the discreteness limit stated explicitly.
+- **Catch-up / keep-up** now reports its target horizon, denominators, and intervals.
+- **Standard deviations** accompany every group mean.
+:::
+::: {.column width="49%"}
+**What remains open**
+
+- Whether to **re-establish baseline norms**, and on what cadence. The committee's written comments point in both directions; this deck states the trade-off rather than resolving it.
+- Whether the ELA growth pattern and the ELA equating pattern are **the same phenomenon**.
+- A **form-effects study** using Massachusetts spiralled forms, designed jointly with the validation work.
+:::
+:::
+
+::: {.notes}
+Open by naming the feedback and what it changed. The point of the pipeline is that this took a rebuild, not a rewrite. Two claims in the committee's notes could not be checked against the student-level file and are deliberately not asserted anywhere in this deck: the digital SAT conversion issue, and the form-spiralling contrast between Rhode Island and Massachusetts. Both need confirmation from RIDE, Cognia, or the College Board before they go on a slide.
 :::
 
 
@@ -237,6 +323,7 @@ Same 2017&ndash;18 / 2018&ndash;19 baseline window as RICAS; SAT is the single-p
 - All analyses used student-level data supplied by the Rhode Island Department of Education, **received `r M$data_received`** (a correction to an earlier file affecting several hundred students).
 - Conducted with the **`SGP` R package** (version `r M$sgp_package_version`).
 - All analyses converged; goodness-of-fit plots confirm successful analyses.
+- This is **revision 2** of the deck, regenerated after TAC feedback; the underlying student-level file is unchanged.
 - Source code is public on GitHub:
   - Analyses: [github.com/CenterForAssessment/Rhode_Island](https://github.com/CenterForAssessment/Rhode_Island)
   - SGP package: [github.com/CenterForAssessment/SGP](https://github.com/CenterForAssessment/SGP)
@@ -302,7 +389,7 @@ emit_html(sprintf('
   </thead>
   <tbody>%s</tbody>
 </table>
-<div class="rt-caption">Each cell: mean&#8202;/&#8202;median&#8202;/&#8202;N of student growth percentiles, %s. Cohort norms center on 50 by construction; baseline norms are referenced to pre-pandemic rates of learning. Data received %s.</div>
+<div class="rt-caption">Each cell: mean&#8202;/&#8202;median&#8202;/&#8202;N of student growth percentiles, %s. Cohort norms center on 50 by construction; baseline norms are referenced to pre-pandemic rates of learning. <strong>The grade-11 baseline cells are shown for the committee only</strong> &mdash; this revision recommends withholding them from public reporting (see section 4). Data received %s.</div>
 ',
 COHORT_COL, COHORT_COL, "#7a5c33", "#7a5c33", BASELINE_COL,
 paste(rows, collapse = "\n"), AYL, M$data_received))
@@ -319,7 +406,9 @@ Walk the cohort columns first (all ~50, as expected), then the baseline columns 
 #| output: asis
 
 ## Flag baseline means that deviate meaningfully from 50 (analysis year, RICAS + SAT).
-by <- ov[YEAR == AY & n_baseline > 0]
+## RICAS only: the grade-11 baseline results are treated separately (section 4),
+## because there the conditional and cross-sectional measurements disagree.
+by <- ov[YEAR == AY & n_baseline > 0 & ASSESSMENT == "RICAS"]
 by[, dev := mean_baseline - 50]
 flag <- by[abs(dev) >= 2][order(-abs(dev))]
 
@@ -345,11 +434,11 @@ emit_html(sprintf('
 ```
 
 ::: {.key-insight}
-Cohort-referenced results are, as expected, centered on 50 with excellent model fit. The **baseline** results are uneven across grade/content &mdash; the pattern we investigate in the trends section.
+Cohort-referenced results are, as expected, centered on 50 with even conditional coverage. The **baseline** results are uneven across grade and content &mdash; the pattern the next section reads against cross-sectional status. Grade 11 is held back for section 4.
 :::
 
 ::: {.notes}
-This slide is generated from the data, so the flagged grades update automatically with a new run. Keep interpretation cautious: deviations can reflect real growth change, cohort composition, or scale drift.
+Generated from the data, so the flagged grades update automatically with a new run. Restricted to RICAS in this revision; grade 11 gets its own section because there the measurements contradict each other. Keep interpretation cautious here and let the context section do the interpreting.
 :::
 
 
@@ -380,14 +469,44 @@ Cohort panels should show the classic ~1/3 Low, Typical, High. Where baseline pa
 :::
 
 
-# Goodness of fit {.center}
+# Model fit and conditional coverage {.center}
 
 ::: {.visually-hidden}
-Section two: goodness of fit
+Section two: model fit and conditional coverage
 :::
 
 ::: {.notes}
-Fit-confirmation only. Budget ~4 minutes for the four GoF slides; click-to-enlarge if anyone wants a panel. Do not linger.
+Renamed in this revision. The committee's objection to the label "goodness of fit" was well taken: the next slide states what these plots do and do not test. Budget ~5 minutes; click-to-enlarge if anyone wants a panel.
+:::
+
+
+## What these plots do and do not diagnose
+
+::: {.tac-tag}
+Revised following TAC comment
+:::
+
+Each plot shows, for every decile of prior achievement, the share of students falling in each growth-percentile decile. Two different things move those cells, and only one of them is a fitting problem.
+
+::: {.columns}
+::: {.column width="48%"}
+**What they diagnose**
+
+*Systematic tilt across prior achievement.* If growth percentiles drift upward or downward as prior achievement rises, the conditional model is not covering the range of prior achievement evenly. That is misfit, and it is actionable.
+:::
+::: {.column width="48%"}
+**What they cannot diagnose**
+
+*Departure from exact uniformity.* Scores are discrete. Students sharing a prior and a current score must receive the same growth percentile, so the conditional distribution cannot be uniform and the cells cannot all sit at 10%. That lumpiness follows from fitting a continuous quantile model to a discrete scale.
+:::
+:::
+
+::: {.key-insight}
+The diagnostic content is the **tilt**, not the distance from 10%. The residual lumpiness is a property of the model meeting a discrete scale &mdash; it is the model's constraint, not a defect in the data. For baseline norms a level shift is neither: it is the change in the prior-to-current relationship that the comparison exists to detect.
+:::
+
+::: {.notes}
+This slide answers a standing TAC objection: calling these "goodness of fit" invited the reading that any departure from uniformity is a failure. It is not, and the discreteness floor belongs to the model rather than to the scale. What remains genuinely diagnostic is conditional tilt, and there is none of consequence here. Say plainly that the label was imprecise and that this is the corrected framing.
 :::
 
 
@@ -451,14 +570,14 @@ Both norm sets fit the data well. The difference is the **reference**: cohort ce
 :::
 
 
-# In-depth trend analysis {.center}
+# Growth in context {.center}
 
 ::: {.visually-hidden}
-Section three: trends over time
+Section three: growth in context
 :::
 
 ::: {.notes}
-The analytic heart of the talk (~12&ndash;15 minutes). Slow down. The next slides describe a deceleration; they do not diagnose its cause.
+The analytic heart of the talk (~15 minutes) and the section most changed in this revision. Baseline growth is no longer presented on its own; it is read against cross-sectional status in the norm period, which is what the committee asked for. That pairing reverses the sign of the mathematics story. Slow down here.
 :::
 
 
@@ -534,40 +653,176 @@ ggplot(tr, aes(x = YEAR_LABEL, y = mean_baseline, color = GRADE, group = GRADE))
   scale_color_brewer(palette = "Dark2", name = "Grade") +
   labs(x = NULL, y = "Mean baseline SGP",
        title = "Baseline-referenced growth by grade, over time",
-       subtitle = "Same grade, successive cohorts. A move away from 50 is a change in rate of learning relative to 2017–19 — not yet a diagnosis of why.") +
+       subtitle = "Same grade, successive cohorts, baseline-referenced. Read on its own this looks like a mathematics problem. The next slides show why it is not.") +
   theme_ri(20) + theme(legend.position = "right")
 ```
 
 ::: {.notes}
-Vertical reading: same grade, successive cohorts. Mathematics grades 4&ndash;6 are the multi-year decline. Do not call this scale drift here &mdash; the next slide says why.
+Vertical reading: same grade, successive cohorts. Mathematics grades 4&ndash;6 show the multi-year decline. In the previous revision this was where the deck raised the alarm. Do not do that now &mdash; set it up as the puzzle and go to the context slides, which resolve most of it.
 :::
 
 
-## What a same-grade decline does and does not imply
+## Baseline growth needs a second measurement
 
-A drop in mean baseline SGP at a **fixed grade** means successive cohorts at that grade grew more slowly than the 2017&ndash;19 reference. That is a description of the rate of learning, not a diagnosis of its cause.
+::: {.tac-tag}
+Added following TAC comment
+:::
+
+A mean baseline SGP is a **conditional** statement: given where these students started, how does their current standing compare with the 2017&ndash;19 relationship between prior and current scores? It cannot, alone, separate a change in learning from a change in the scale.
+
+The committee's remedy is to put it beside the **cross-sectional** comparison from the same norm period &mdash; a distributional comparison that assumes no growth model at all, following Ho (2009).
+
+::: {.theorem-box}
+::: {.theorem-box-title}
+The two are the same statistic, with and without conditioning
+:::
+Drop the prior-score conditioning from a baseline SGP and it becomes the percentile of a student's score in the norm-period **marginal** distribution. Averaged over the cohort, that is
+
+$$E\left[F_b(Y_c)\right] = \Pr(Y_b < Y_c) = \mathrm{AUC}, \qquad V = \sqrt{2}\,\Phi^{-1}(\mathrm{AUC})$$
+
+the Mann&ndash;Whitney statistic behind Ho's scale-invariant $V$. The cross-sectional comparison is the **zero-covariate case** of the baseline SGP &mdash; not a rival method.
+:::
+
+::: {.notes}
+This is the conceptual pivot of the revision, and it is worth being precise about the credit. The committee proposed CDF-based comparisons as a better drift diagnostic than SGPs. The relationship is tighter than either framing suggests: they are the same estimand with and without conditioning on prior achievement. Conditioning buys removal of the largest source of cohort composition change; it costs a model, and it inherits any drift in the PRIOR year's scale. The unconditional version assumes nothing and inherits nothing, but confounds composition with scale with learning. Neither identifies drift alone. Reference: Ho, A. D. (2009), A nonparametric framework for comparing trends and gaps across tests, JEBS 34, 201-228.
+:::
+
+
+## The same grades, measured both ways
+
+```{r context-joint}
+#| fig-width: 16
+#| fig-height: 6.4
+
+yrs <- c("2021_2022", "2022_2023", "2023_2024", "2024_2025", "2025_2026")
+gr5 <- as.character(4:8)
+
+cond <- ov[ASSESSMENT == "RICAS" & GRADE %in% gr5 & YEAR %in% yrs & n_baseline > 0,
+           .(SUBJECT, GRADE, YEAR_LABEL, value = mean_baseline)]
+cond[, measure := "Conditional — mean baseline SGP"]
+
+unc <- xsec[ASSESSMENT == "RICAS" & GRADE %in% gr5 & YEAR %in% yrs,
+            .(SUBJECT, GRADE, YEAR_LABEL, value = auc)]
+unc[, measure := paste0("Unconditional — status vs ", BNYL)]
+
+cmb <- rbind(cond, unc)
+cmb[, GRADE := factor(GRADE, levels = gr5)]
+cmb[, measure := factor(measure, levels = c(paste0("Unconditional — status vs ", BNYL),
+                                            "Conditional — mean baseline SGP"))]
+
+ggplot(cmb, aes(x = YEAR_LABEL, y = value, color = GRADE, group = GRADE)) +
+  geom_hline(yintercept = 50, color = "#9a9a94", linetype = "22") +
+  geom_line(linewidth = 1.05) +
+  geom_point(size = 2.4) +
+  facet_grid(SUBJECT ~ measure) +
+  scale_color_brewer(palette = "Dark2", name = "Grade") +
+  labs(x = NULL, y = "Percentile points (50 = norm period)",
+       title = "Conditional growth and unconditional status, against the same 2017–19 reference",
+       subtitle = "Left: where this year's distribution sits in the norm-period distribution. Right: mean baseline SGP.") +
+  theme_ri(19) + theme(legend.position = "right")
+```
+
+::: {.notes}
+The two columns answer different questions against the same reference. Mathematics: status climbs every year in every grade and is now at or above the norm period, while baseline SGP falls toward 50 from well above it. ELA: status is flat and below the norm period throughout, and baseline SGP sits below 50 in most grades. Let the audience read the divergence before you interpret it on the next slide.
+:::
+
+
+## Reading the two together
 
 ::: {.columns}
-::: {.column width="48%"}
-**More consistent with slower learning gains**
+::: {.column width="49%"}
+**Mathematics &mdash; recovery completing**
 
-- A multi-year decline in one subject that the other subject does not share
-- A **diagonal** pattern: the same students decelerate as they age
+Status rose in every grade every year: grade 4 from `r sprintf("%.0f", xs_val("MATHEMATICS","4",year="2021_2022"))` to `r sprintf("%.0f", xs_val("MATHEMATICS","4"))`, grade 8 from `r sprintf("%.0f", xs_val("MATHEMATICS","8",year="2021_2022"))` to `r sprintf("%.0f", xs_val("MATHEMATICS","8"))`.
+
+The falling baseline SGP is the **fading of rebound growth off a depressed base**, not deterioration. Growth far above the pre-pandemic rate was what recovery required; arriving back at 50 is what its completion looks like.
 :::
-::: {.column width="48%"}
-**More consistent with scale / linking**
+::: {.column width="49%"}
+**ELA &mdash; the genuine concern**
 
-- A same-year, same-direction move **across grades** (and often both subjects)
-- A known form or equating change in that year
+Status is flat and below the norm period in every grade and every year (`r sprintf("%.0f", xs_val("ELA","5"))` at grade 5, `r sprintf("%.0f", xs_val("ELA","6"))` at grade 6), and baseline SGP is below 50 in the same grades.
+
+Both measurements agree, and neither is recovering. This, not the mathematics line, is where the deck's concern belongs.
 :::
 :::
 
 ::: {.key-insight}
-Mathematics grades 4&ndash;6 show a multi-year decline that ELA does not share. That pattern does **not** let us prefer scale drift over slower learning &mdash; both remain open, which is the first question for the TAC.
+The measurements move **in opposite directions across subjects**. A program-wide linking or equating event would move grades and subjects together in one year. That is not what the RICAS data show &mdash; which argues against a common scale-drift explanation and for reading these as real, subject-specific changes.
 :::
 
 ::: {.notes}
-This is the careful reading. Mathematics 4: 57.6 (2023) to 49.7 (2026); ELA 4 over the same years is flat-to-up. A single program-wide linking event would more often move both subjects, and more grades, in the same year. Subject-specific math scale drift is still possible. Hold the tension; do not resolve it.
+This slide reverses the previous revision's emphasis, and say so out loud. Last version led with the mathematics decline as the worry and held the drift question open. Adding the cross-sectional context resolves most of it: mathematics status is up, so the falling baseline SGP is recovery completing rather than slowing learning. ELA is down on both measures and is the finding that deserves attention. The one grade that stands out, ELA grade 7, is high on both measures in every year 2022 through 2026, not just this year, so a 2026 equating event is an unlikely explanation for it.
+:::
+
+
+## The distributional comparison itself
+
+```{r pp-plot}
+#| fig-width: 16
+#| fig-height: 5.9
+
+pl <- ppc[ASSESSMENT == "RICAS" & GRADE %in% as.character(4:8)]
+pl[, GRADE := factor(paste("Grade", GRADE), levels = paste("Grade", 4:8))]
+
+ggplot(pl, aes(x = p_base, y = p_cur)) +
+  geom_abline(slope = 1, intercept = 0, color = "#9a9a94", linetype = "22") +
+  geom_line(aes(color = SUBJECT), linewidth = 1.05) +
+  facet_grid(SUBJECT ~ GRADE) +
+  scale_color_manual(values = c(ELA = COHORT_COL, Mathematics = "#7a5c33"), guide = "none") +
+  scale_x_continuous(breaks = c(0, 50, 100)) +
+  scale_y_continuous(breaks = c(0, 50, 100)) +
+  coord_fixed() +
+  labs(x = paste0("Percentile in the ", BNYL, " distribution"),
+       y = paste0(AYL, " percentile"),
+       title = paste0("Probability–probability plots: ", AYL, " against ", BNYL),
+       subtitle = "Above the diagonal = more students below that score than in the norm period, i.e. the distribution has moved down. Invariant to any monotone rescaling.") +
+  theme_ri(17)
+```
+
+::: {.key-insight}
+ELA sits above the diagonal at every grade and across the whole range &mdash; a uniform downward shift, not a tail effect. Mathematics tracks the diagonal closely, with grades 4 and 5 slightly below it.
+:::
+
+::: {.notes}
+This is the display the committee asked for, and its value is that it makes no distributional or model assumption and survives any monotone rescaling of the reported scale. A curve that departs from the diagonal only at one end would point to a tail or ceiling problem; a parallel offset across the range, which is what ELA shows, is a whole-distribution shift. Note the visible stepping: it is the discreteness of the reported scale, the same discreteness discussed in the model-fit section.
+:::
+
+
+## Do the two measurements agree?
+
+```{r prof-scatter}
+#| fig-width: 15
+#| fig-height: 6.0
+
+p19 <- prof[YEAR == BNY & ASSESSMENT == "RICAS", .(CONTENT_AREA, GRADE, prof_base = pct_proficient)]
+p26 <- prof[YEAR == AY  & ASSESSMENT == "RICAS", .(CONTENT_AREA, GRADE, SUBJECT, prof_now = pct_proficient)]
+sc  <- merge(p26, p19, by = c("CONTENT_AREA", "GRADE"))
+sc  <- merge(sc, ov[YEAR == AY & ASSESSMENT == "RICAS" & n_baseline > 0,
+                    .(CONTENT_AREA, GRADE, mean_baseline)],
+             by = c("CONTENT_AREA", "GRADE"))
+sc[, prof_chg := prof_now - prof_base]
+
+ggplot(sc, aes(x = prof_chg, y = mean_baseline, color = SUBJECT)) +
+  geom_hline(yintercept = 50, color = "#9a9a94", linetype = "22") +
+  geom_vline(xintercept = 0, color = "#9a9a94", linetype = "22") +
+  geom_point(size = 4.2) +
+  geom_text(aes(label = GRADE), vjust = -1.15, size = 5.5, show.legend = FALSE) +
+  scale_color_manual(values = c(ELA = COHORT_COL, Mathematics = "#7a5c33")) +
+  scale_x_continuous(expand = expansion(mult = 0.12)) +
+  scale_y_continuous(expand = expansion(mult = 0.12)) +
+  labs(x = paste0("Change in % proficient since ", BNYL, " (percentage points)"),
+       y = "Mean baseline SGP",
+       title = "Naive status trend against baseline-referenced growth",
+       subtitle = "Points are grades. Agreement between the two suggests a real trend; disagreement is the diagnostic signature worth investigating.") +
+  theme_ri(19)
+```
+
+::: {.key-insight}
+**ELA agrees strongly across the two measurements** &mdash; grade 7 highest on both, grades 5 and 6 lowest on both. **Mathematics sits close to the reference on both**: status slightly above `r BNYL`, conditional growth slightly below it. That combination describes a cohort arriving in the grade already ahead of its `r BNYL` counterpart, not a scale artifact &mdash; which would show up as a grade far from the reference on one measure and unmoved on the other.
+:::
+
+::: {.notes}
+This is the twelve-point plot the committee asked for two meetings running, now standing. The criterion is the committee's own: where the naive trend and the growth measure agree, the trend is probably real; where a grade shows flat status and a baseline SGP well below 50, or the reverse, that is where to look. Nothing here is badly off-diagonal for RICAS. Grade 11 is deliberately absent and is the subject of the next section, because it is precisely the case where the two measurements contradict each other.
 :::
 
 
@@ -617,10 +872,117 @@ Diagonal reading: this is one cohort aging through the system, not a fixed grade
 :::
 
 
+# Grade 11: a linking question {.center}
+
+::: {.visually-hidden}
+Section four: grade 11
+:::
+
+::: {.notes}
+New in this revision, and the strongest recommendation in the deck. Budget ~6 minutes and do not rush the recommendation slide.
+:::
+
+
+## Two measurements that cannot both be right
+
+::: {.columns}
+::: {.column width="48%"}
+**What the baseline SGPs say**
+
+- ELA: mean/median **`r sprintf("%.1f", get_val("ELA_SAT","11 (SAT)","mean_baseline"))` / `r sprintf("%.0f", get_val("ELA_SAT","11 (SAT)","median_baseline"))`**
+- Mathematics: **`r sprintf("%.1f", get_val("MATHEMATICS_SAT","11 (SAT)","mean_baseline"))` / `r sprintf("%.0f", get_val("MATHEMATICS_SAT","11 (SAT)","median_baseline"))`**
+
+Read literally: the typical Rhode Island eleventh grader grew at roughly the **`r sprintf("%.0f", get_val("ELA_SAT","11 (SAT)","median_baseline"))`th percentile** of the pre-pandemic growth distribution in ELA.
+:::
+::: {.column width="48%"}
+**What every other measurement says**
+
+- ELA status vs `r BNYL`: **`r sprintf("%.0f", xs_val("ELA_SAT","EOCT"))`** (50 = unchanged)
+- Mathematics status vs `r BNYL`: **`r sprintf("%.0f", xs_val("MATHEMATICS_SAT","EOCT"))`**
+- Percent proficient, ELA: `r sprintf("%.1f%%", prof_val("ELA_SAT","EOCT", BNY))` &rarr; **`r sprintf("%.1f%%", prof_val("ELA_SAT","EOCT"))`**
+- Percent proficient, mathematics: `r sprintf("%.1f%%", prof_val("MATHEMATICS_SAT","EOCT", BNY))` &rarr; **`r sprintf("%.1f%%", prof_val("MATHEMATICS_SAT","EOCT"))`**
+
+Grade-11 achievement is **down** on every cross-sectional measure.
+:::
+:::
+
+::: {.key-insight}
+Exceptional growth against a pre-pandemic reference, in a cohort whose measured achievement has fallen relative to that same reference, is not a coherent description of Rhode Island eleventh graders. The most likely explanation is the **PSAT-10 to SAT relationship**, not the students.
+:::
+
+::: {.notes}
+This is the committee's triangulation principle applied to the case where it bites hardest. Note what changed between the norm period and now: the 2018 and 2019 baseline is the paper SAT, the 2026 administration is digital and adaptive. A change in the prior-to-current relationship of exactly that kind would inflate conditional growth while leaving status alone or depressed, which is what we see. Be careful to claim only what the data support: the contradiction is established here; the specific mechanism is not.
+:::
+
+
+## The shape of the grade-11 distribution
+
+```{r sat-distribution}
+#| fig-width: 16
+#| fig-height: 5.8
+
+d11 <- sgpd[ASSESSMENT == "SAT"]
+d11[, dec_label := factor(DECILE, levels = 0:9,
+      labels = sprintf("%d–%d", (0:9) * 10 + 1, pmin(99L, ((0:9) + 1L) * 10L)))]
+d11[, NORM := factor(NORM, levels = c("Cohort", "Baseline"))]
+
+ggplot(d11, aes(x = dec_label, y = pct, fill = NORM)) +
+  geom_hline(yintercept = 10, color = "#9a9a94", linetype = "22") +
+  geom_col(width = 0.8) +
+  facet_grid(SUBJECT ~ NORM) +
+  scale_fill_manual(values = c(Cohort = COHORT_COL, Baseline = BASELINE_COL), guide = "none") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"),
+                     expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Growth percentile", y = NULL,
+       title = paste0("Full grade-11 growth percentile distributions, ", AYL),
+       subtitle = "Dashed line = the 10% each decile would hold in the reference population") +
+  theme_ri(18) + theme(axis.text.x = element_text(size = rel(0.72)))
+```
+
+::: {.key-insight}
+Cohort norms are flat, as they must be. The ELA **baseline** distribution rises monotonically to **`r sprintf("%.0f%%", sgpd[CONTENT_AREA=="ELA_SAT" & NORM=="Baseline" & DECILE==9, pct])`** in the top decile &mdash; nearly three times its expected share. A shape like that is a property of the comparison, not of a cohort.
+:::
+
+::: {.notes}
+The committee asked to see the distribution rather than the summary, on the reasoning that growth percentiles are built to be roughly uniform in the reference population, so a strongly skewed baseline distribution is itself informative. It was the right request. The gap between the ELA baseline mean and median follows directly from this pile-up at the ceiling.
+:::
+
+
+## Recommendation on grade-11 baseline reporting
+
+::: {.warning-box}
+::: {.warning-box-title}
+Withhold grade-11 baseline SGPs from public reporting
+:::
+Grade-11 **baseline** growth percentiles should be withheld from public reporting until the PSAT-10 to SAT linking question is resolved, and the reason should be stated publicly rather than left as a silent omission. Grade-11 **cohort** growth percentiles are unaffected and remain suitable for reporting and accountability use.
+:::
+
+::: {.columns}
+::: {.column width="49%"}
+**Why now**
+
+- The conditional and cross-sectional measurements contradict each other.
+- The baseline distribution is piled at its ceiling.
+- The growth window is a single prior, so the estimate is maximally sensitive to any change in the prior-to-current relationship.
+:::
+::: {.column width="49%"}
+**What would resolve it**
+
+- Confirmation from the College Board on the comparability of the current score conversion with the `r BNYL` administration.
+- Re-estimation of the grade-11 baseline against a post-transition norm period once one exists.
+- Until then, report grade-11 growth on cohort norms only.
+:::
+:::
+
+::: {.notes}
+Say plainly that this is a change from the previous revision, which reported these numbers with a caveat. A caveat is not sufficient when the headline figure is a median growth percentile in the seventies that we do not believe. Note also what this deck deliberately does not assert: no claim is made here about any specific defect in the digital conversion, because that could not be verified from the student-level file. The case for withholding rests entirely on the internal contradiction, which is verifiable.
+:::
+
+
 # Growth equity {.center}
 
 ::: {.visually-hidden}
-Section four: growth by student group
+Section five: growth by student group
 :::
 
 ::: {.notes}
@@ -639,7 +1001,8 @@ sp <- sgp_pool[ASSESSMENT == "RICAS" & DIMENSION %in% dims]
 cell <- function(subj, grp, col) {
   r <- sp[SUBJECT == subj & GROUP == grp]
   if (!nrow(r)) return("&mdash;")
-  fmt_mmn(r[[paste0("mean_", col)]], r[[paste0("median_", col)]], r[[paste0("n_", col)]])
+  fmt_mmsn(r[[paste0("mean_", col)]], r[[paste0("median_", col)]],
+           r[[paste0("sd_", col)]], r[[paste0("n_", col)]])
 }
 
 body <- ""
@@ -668,11 +1031,11 @@ emit_html(sprintf('
   </thead>
   <tbody>%s</tbody>
 </table>
-<div class="rt-caption">mean&#8202;/&#8202;median&#8202;/&#8202;N, RICAS grades 4&ndash;8 pooled, %s.</div>', body, AYL))
+<div class="rt-caption">mean&#8202;/&#8202;median&#8202;/&#8202;SD&#8202;/&#8202;N, RICAS grades 4&ndash;8 pooled, %s. Standard deviations added at the committee\'s request.</div>', body, AYL))
 ```
 
 ::: {.notes}
-Cohort SGPs near 50 across groups indicate comparable within-year growth. Baseline gaps reflect pre-pandemic-referenced differences. Note where cohort and baseline tell different stories.
+Standard deviations are new this revision. The committee expected the spread to carry the equity story; it does not. Every group sits near 29, within a point of every other group, so the differences are entirely in central tendency. Worth saying explicitly, because it rules out a real possibility rather than merely confirming the obvious.
 :::
 
 
@@ -708,10 +1071,100 @@ The dashed line is 50. Cohort bars near 50 = comparable current-year growth; the
 :::
 
 
+## Within-year growth is close to comparable across groups
+
+::: {.tac-tag}
+Elevated following TAC comment
+:::
+
+```{r equity-comparable}
+#| output: asis
+
+pairs <- list(
+  c("English Language Learners (ELL)", "Non-English Language Learners (non-ELL)"),
+  c("Students with Disabilities (IEP)", "Students without Disabilities (Non-IEP)"),
+  c("Economically Disadvantaged", "Not Economically Disadvantaged")
+)
+labs_ <- c("English learners", "Students with disabilities", "Economically disadvantaged")
+
+mk <- function(pr, lab) {
+  vals <- vapply(c("ELA", "Mathematics"), function(sj) {
+    a <- sgp_pool[ASSESSMENT == "RICAS" & SUBJECT == sj & GROUP == pr[1], mean_cohort]
+    b <- sgp_pool[ASSESSMENT == "RICAS" & SUBJECT == sj & GROUP == pr[2], mean_cohort]
+    sprintf("%.1f vs %.1f", a, b)
+  }, character(1))
+  sprintf('<tr><th class="rt-grade">%s</th><td>%s</td><td>%s</td></tr>', lab, vals[1], vals[2])
+}
+
+emit_html(sprintf('
+<table class="results-table" style="font-size:0.68em;max-width:60%%;margin:0 auto">
+  <thead><tr><th>Group vs. comparison group</th><th>ELA</th><th>Mathematics</th></tr></thead>
+  <tbody>%s</tbody>
+</table>
+<div class="rt-caption">Mean cohort-referenced SGP, RICAS grades 4&ndash;8 pooled, %s. Standard deviations differ by less than one point across every one of these groups.</div>',
+paste(vapply(seq_along(pairs), function(i) mk(pairs[[i]], labs_[i]), character(1)), collapse = ""), AYL))
+```
+
+::: {.key-insight}
+Where achievement gaps are large, **within-year growth is not**. Cohort SGPs sit within a few points of 50 for every group. Students with disabilities are the one substantial exception, and that gap is consistent across both subjects.
+:::
+
+::: {.notes}
+The committee's point, and it is well taken: this is a more actionable finding than anything in the baseline columns, and the previous revision buried it in a table. Comparable growth alongside large achievement gaps means the gaps are being maintained rather than widened, which locates the problem in accumulated prior learning rather than in current instruction. The disability gap is the exception and should be named as the priority. Descriptive, not causal.
+:::
+
+
 # Target attainment {.center}
 
 ::: {.visually-hidden}
-Section five: catch-up / keep-up
+Section six: catch-up / keep-up
+:::
+
+
+## What the target actually is
+
+::: {.tac-tag}
+Revised following TAC comment
+:::
+
+"Catch up" and "keep up" mean nothing without a stated horizon. In Rhode Island the target is proficiency **by the end of the RICAS progression**, so the horizon is not constant &mdash; it shrinks as students approach grade 8.
+
+```{r targets-horizon}
+#| output: asis
+
+hz <- tg[METRIC == "Catch Up / Keep Up" & NORM == "Cohort" & ASSESSMENT == "RICAS",
+         .(n = sum(n), attained = sum(attained),
+           yrs = max(years_to_target, na.rm = TRUE)),
+         by = .(GRADE_LABEL, aspiration)]
+hz[, rate := 100 * attained / n]
+
+grades_h <- as.character(4:8)
+rows_h <- vapply(grades_h, function(gl) {
+  cu <- hz[GRADE_LABEL == gl & aspiration == "Catch Up"]
+  ku <- hz[GRADE_LABEL == gl & aspiration == "Keep Up"]
+  sprintf('<tr><th class="rt-grade">Grade %s</th><td><strong>%s</strong></td><td>%.1f%%</td><td>%.1f%%</td></tr>',
+          gl,
+          if (nrow(cu)) ifelse(cu$yrs == 0, "same year", sprintf("%d year%s", as.integer(cu$yrs),
+                                ifelse(cu$yrs == 1, "", "s"))) else "&mdash;",
+          if (nrow(cu)) cu$rate else NA_real_,
+          if (nrow(ku)) ku$rate else NA_real_)
+}, character(1))
+
+emit_html(sprintf('
+<table class="results-table" style="font-size:0.66em;max-width:70%%;margin:0 auto">
+  <thead><tr><th>Grade</th><th>Horizon to target</th><th>Catch-up rate</th><th>Keep-up rate</th></tr></thead>
+  <tbody>%s</tbody>
+</table>
+<div class="rt-caption">Cohort targets, RICAS, ELA and mathematics pooled, %s. Horizon is the median number of years to the target.</div>',
+paste(rows_h, collapse = ""), AYL))
+```
+
+::: {.key-insight}
+As the horizon shrinks from three years to none, catch-up rates fall and keep-up rates rise &mdash; monotonically, in both subjects. Most of the apparent grade gradient is the **target**, not the students. Grade-to-grade comparisons are not meaningful unless the horizon travels with them.
+:::
+
+::: {.notes}
+The committee asked that the target be made explicit, on the grounds that leaving it out effectively changes the standard across grades. Checking it in the data showed the problem is larger than the comment implied: the horizon runs from three years at grade 4 to zero at grade 8, where "catch up" collapses into "is proficient now" and "keep up" into "is still proficient now". That is why the grade-8 catch-up rate is the lowest and the grade-8 keep-up rate the highest. The committee's further suggestion — that these labels earn their keep in individual student reporting rather than aggregate monitoring — is well taken, and one aggregate figure is retained here only because it is already in use.
 :::
 
 
@@ -719,26 +1172,34 @@ Section five: catch-up / keep-up
 
 ```{r targets-plot}
 #| fig-width: 16
-#| fig-height: 6.0
+#| fig-height: 5.9
 
 ct <- tg[METRIC == "Catch Up / Keep Up" & NORM == "Cohort" & ASSESSMENT == "RICAS"]
 ct[, GRADE_LABEL := factor(GRADE_LABEL, levels = as.character(4:8))]
 ct[, aspiration := factor(aspiration, levels = c("Catch Up", "Keep Up"))]
+ct[, xlab := paste0(GRADE_LABEL, "\n(", ifelse(years_to_target == 0, "same yr",
+                    paste0(years_to_target, " yr")), ")")]
+ct[, xlab := factor(xlab, levels = unique(xlab[order(GRADE_LABEL)]))]
 
-ggplot(ct, aes(x = GRADE_LABEL, y = rate, fill = aspiration)) +
+ggplot(ct, aes(x = xlab, y = rate, fill = aspiration)) +
   geom_col(position = position_dodge(width = 0.75), width = 0.68) +
+  geom_errorbar(aes(ymin = rate_lo, ymax = rate_hi),
+                position = position_dodge(width = 0.75), width = 0.16,
+                linewidth = 0.5, color = "#141410") +
+  geom_text(aes(label = fmt_count(n), y = 3),
+            position = position_dodge(width = 0.75), size = 3.6, color = "white") +
   facet_wrap(~ SUBJECT) +
   scale_fill_manual(values = c("Catch Up" = "#8E44AD", "Keep Up" = COHORT_COL)) +
   scale_y_continuous(labels = function(x) paste0(x, "%"),
                      limits = c(0, 100), expand = expansion(mult = c(0, 0.02))) +
-  labs(x = "Grade", y = "% attaining target",
+  labs(x = "Grade (horizon to target)", y = "% attaining target",
        title = "Share of students on track to catch up / keep up",
-       subtitle = "Catch Up = students below proficient; Keep Up = students at/above proficient (cohort targets)") +
-  theme_ri(20)
+       subtitle = "Catch Up = students below proficient; Keep Up = students at/above. Bars show 95% Wilson intervals; N is printed in each bar.") +
+  theme_ri(19)
 ```
 
 ::: {.notes}
-"Catch Up: Yes" among students who need to catch up; "Keep Up: Yes" among those at/above. Keep-up rates run higher than catch-up rates &mdash; the recovery challenge is concentrated in catch-up.
+Same figure as the previous revision with three additions the committee asked for: the horizon on the axis, denominators in the bars, and intervals. Read across grades only with the horizon in view. The intervals are narrow because the denominators are large; they are here so the rates are falsifiable, not because precision is in doubt.
 :::
 
 
@@ -748,22 +1209,21 @@ ggplot(ct, aes(x = GRADE_LABEL, y = rate, fill = aspiration)) +
 #| output: asis
 
 th <- tgh[NORM == "Cohort"]
-mk_stat <- function(status_label, aspiration_label) {
-  r <- th[grepl(sub(" .*", "", status_label), HIGH_NEED_STATUS) & aspiration == aspiration_label]
-  if (!nrow(r)) return("&mdash;")
-  sprintf("%.0f%%", r$rate)
-}
-
 low  <- th[grepl("< 25", HIGH_NEED_STATUS) & aspiration == "Catch Up"]
 high <- th[grepl("> 75", HIGH_NEED_STATUS) & aspiration == "Keep Up"]
 
 emit_html(sprintf('
 <div style="display:flex;gap:2em;justify-content:center;margin-top:0.5em">
   <div class="stat-callout"><div class="stat-number">%.0f%%</div>
-    <div class="stat-label">of lowest-prior-achievement students (&lt;25th %%ile)<br/>are on track to <strong>catch up</strong></div></div>
+    <div class="stat-label">of lowest-prior-achievement students (&lt;25th %%ile)<br/>are on track to <strong>catch up</strong><br/>
+      <span style="font-size:0.82em;opacity:0.75">N = %s &middot; 95%% CI %.1f&ndash;%.1f%%</span></div></div>
   <div class="stat-callout"><div class="stat-number">%.0f%%</div>
-    <div class="stat-label">of highest-prior-achievement students (&gt;75th %%ile)<br/>are on track to <strong>keep up</strong></div></div>
-</div>', low$rate, high$rate))
+    <div class="stat-label">of highest-prior-achievement students (&gt;75th %%ile)<br/>are on track to <strong>keep up</strong><br/>
+      <span style="font-size:0.82em;opacity:0.75">N = %s &middot; 95%% CI %.1f&ndash;%.1f%%</span></div></div>
+</div>
+<div class="rt-caption" style="text-align:center">These are different students judged against different targets, so the two figures are not a gap. Denominators and intervals added at the committee\'s request.</div>',
+low$rate, fmt_count(low$n), low$rate_lo, low$rate_hi,
+high$rate, fmt_count(high$n), high$rate_lo, high$rate_hi))
 ```
 
 ::: {.key-insight}
@@ -771,20 +1231,22 @@ Students entering below the 25th percentile face the steepest catch-up targets a
 :::
 
 ::: {.notes}
-Numbers pull from the high-need contrast in the cache. This frames the accountability-use conversation.
+Denominators and intervals are new. Say the caveat out loud: these two percentages describe different students measured against different targets, so quoting them as a gap would be wrong. What the pair does establish is that the catch-up target is far harder to reach than the keep-up target, and that the students facing it are the ones furthest behind.
 :::
 
 
-## Summary
+## Summary {.smaller}
 
-- **Cohort-referenced SGPs** show excellent model fit across RICAS and SAT &mdash; suitable for accountability calculations.
-- **Baseline-referenced SGPs** are uneven: some grade/content pairs sit above pre-pandemic rates of learning, others below.
-- **A same-grade decline is a change in the rate of learning** relative to 2017&ndash;19. It does not, by itself, distinguish slower learning gains from scale drift or cohort composition.
-- **The 2022&ndash;26 pattern is mixed** (mathematics grades 4&ndash;6 decline; ELA does not share that path). Equating / linking effects cannot be ruled out, and neither can slower learning.
-- **Equity and target-attainment** results locate the recovery challenge primarily in catch-up for the lowest-prior-achievement students.
+- **Cohort-referenced SGPs** show even conditional coverage across RICAS and SAT &mdash; suitable for accountability calculations.
+- **Mathematics has recovered.** Status is back to or above the `r BNYL` distribution in every grade. The falling baseline SGP is rebound growth fading as recovery completes, not a decline in learning. This reverses the previous revision's reading.
+- **ELA is the genuine concern.** It sits below the norm period on both the conditional and the unconditional measure, in most grades, and is not recovering.
+- **A common scale-drift explanation is not supported for RICAS.** The two subjects move in opposite directions; a linking event would move grades and subjects together.
+- **Grade-11 baseline results should be withheld.** They contradict every cross-sectional measurement of the same cohort and pile up at the ceiling of the distribution.
+- **Within-year growth is comparable across student groups**, with students with disabilities the substantial exception.
+- **Catch-up / keep-up rates are not comparable across grades** without their target horizon, which runs from three years at grade 4 to none at grade 8.
 
 ::: {.notes}
-Land the honest bottom line: cohort norms are solid; baseline movement is real and multiply-determined. Do not prefer scale drift over slower learning.
+Land the bottom line, and be explicit that two conclusions changed from the previous revision: mathematics is reframed from concern to recovery, and grade-11 baseline reporting moves from caveated to withheld. Both changes came from committee feedback, and both were checkable against data already in hand. Credit that.
 :::
 
 
@@ -792,16 +1254,16 @@ Land the honest bottom line: cohort norms are solid; baseline movement is real a
 
 ::: {.key-insight-box}
 ::: {.key-insight-box-title}
-We would value the committee's guidance on
+Where the committee's guidance is still needed
 :::
-1. **Disentangling mechanisms.** What additional analyses would help separate pandemic ripple effects, scale drift, and genuine changes in student growth over time?
-2. **Baseline norm maintenance.** If baseline SGPs continue going forward, should Rhode Island **re-establish baseline norms** (moving off the pre-pandemic 2017&ndash;18 / 2018&ndash;19 reference) &mdash; and on what cadence?
-3. **Form effects.** Would examining cohort-referenced growth **by form** (potentially leveraging MA data) be a productive way to probe linking/form effects? Is that something MA would be interested in pursuing?
-4. **Accountability use.** Given the baseline unevenness, are there guardrails the TAC would recommend for interpreting baseline-referenced growth in public reporting?
+1. **Baseline norm maintenance &mdash; genuinely open.** The written comments point both ways: that the 2017&ndash;19 window may not represent normal growth and should be reset, perhaps pooling several two-year periods; and that re-anchoring destroys the very instrument that makes drift and recovery detectable. Both are right about something. Is the resolution a **dual track** &mdash; a fixed monitoring series plus a re-established reporting norm &mdash; and if so, on what cadence?
+2. **Is the ELA growth pattern the same phenomenon as the ELA equating pattern?** This deck establishes that ELA is down on both conditional and unconditional measures. Whether that connects to the one-directional pattern reported in the MCAS ELA equating is checkable, and needs the Center and Cognia looking at both sets of numbers together.
+3. **Form effects, designed once.** Rhode Island's form-effects question and Cognia's validation question appear to be the same study. Should RIDE commission a single design, and approach Massachusetts jointly &mdash; population invariance being a requirement of equating rather than a courtesy?
+4. **Reporting guardrails.** Proposed: never publish a baseline SGP without the cohort SGP beside it; do not use baseline SGPs in accountability while the drift question is open; withhold grade-11 baseline entirely. Are these the right three?
 :::
 
 ::: {.notes}
-Leave this up and open the floor. Budget ~25 minutes. Question 1 is the mechanism question the trend section teed up. Question 4 (accountability) can be shortened if Day 1 already covered reporting use.
+Leave this up and open the floor. Question 1 is the one that most needs resolving, and the deck deliberately does not take a position because the committee's own written comments contain both positions; ask which was intended. Questions 2 and 3 are commissioning decisions rather than analytic ones. Question 4 is a check on guardrails this revision has already adopted.
 :::
 
 
@@ -820,5 +1282,5 @@ Damian W. Betebenner &middot; National Center for the Improvement of Educational
 :::
 
 ::: {.notes}
-Close and thank the committee. Offer to circulate the deck and the reproducible pipeline.
+Close and thank the committee, and mean it: this revision exists because the feedback was specific enough to act on, and two of its conclusions changed as a result. Offer to circulate the deck and the pipeline, and note that further feedback can be turned around the same way &mdash; the deck rebuilds from the analysis rather than being rewritten.
 :::

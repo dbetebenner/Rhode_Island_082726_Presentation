@@ -126,9 +126,11 @@ summarise_sgp <- function(dt, by) {
   dt[, .(
     mean_cohort   = mean(SGP, na.rm = TRUE),
     median_cohort = as.numeric(median(SGP, na.rm = TRUE)),
+    sd_cohort     = as.numeric(stats::sd(SGP, na.rm = TRUE)),
     n_cohort      = sum(!is.na(SGP)),
     mean_baseline   = mean(SGP_BASELINE, na.rm = TRUE),
     median_baseline = as.numeric(median(SGP_BASELINE, na.rm = TRUE)),
+    sd_baseline     = as.numeric(stats::sd(SGP_BASELINE, na.rm = TRUE)),
     n_baseline      = sum(!is.na(SGP_BASELINE))
   ), by = by]
 }
@@ -140,4 +142,53 @@ summarise_levels <- function(dt, level_col, by) {
   x[, pct := 100 * n / sum(n), by = by]
   setnames(x, level_col, "LEVEL")
   x[]
+}
+
+## ---------------------------------------------------------------------------
+## Cross-sectional distributional comparison (TAC revision, August 2026)
+##
+## The TAC asked that baseline-referenced growth be read alongside
+## cross-sectional results from the baseline norm period. Following
+## Ho (2009), JEBS 34, 201-228, distributions are compared with statistics
+## that are invariant under monotone transformations of the score scale:
+##
+##   AUC = P(Y_current > Y_baseline)   (Mann-Whitney; ties counted as half)
+##   V   = sqrt(2) * qnorm(AUC)
+##
+## AUC is also exactly the mean UNCONDITIONAL baseline percentile of the
+## current cohort -- the baseline SGP with the prior-score conditioning
+## removed -- which is what makes the two series directly comparable.
+## ---------------------------------------------------------------------------
+
+## Reference year for the baseline norm period used in cross-sectional work.
+BASELINE_NORM_YEAR <- "2018_2019"
+
+## Achievement levels counted as proficient (RICAS and SAT share these labels).
+PROFICIENT_LEVELS <- c("Meeting Expectations", "Exceeding Expectations")
+
+auc_stat <- function(cur, base) {
+  cur <- cur[!is.na(cur)]; base <- base[!is.na(base)]
+  nc <- length(cur); nb <- length(base)
+  if (!nc || !nb) return(NA_real_)
+  R <- rank(c(cur, base))
+  (sum(R[seq_len(nc)]) - nc * (nc + 1) / 2) / (nc * nb)
+}
+
+ho_v <- function(auc) sqrt(2) * stats::qnorm(auc)
+
+## PP-plot curve: baseline-period percentile on x, current-year percentile on y.
+pp_curve <- function(cur, base, probs = seq(0.01, 0.99, by = 0.01)) {
+  cur <- cur[!is.na(cur)]; base <- base[!is.na(base)]
+  if (!length(cur) || !length(base)) return(data.table::data.table())
+  q <- stats::quantile(base, probs = probs, names = FALSE, type = 7)
+  data.table::data.table(p_base = 100 * probs, p_cur = 100 * stats::ecdf(cur)(q))
+}
+
+## Wilson score interval for a proportion, returned in percentage points.
+wilson_ci <- function(x, n, z = 1.96) {
+  p <- x / n
+  den <- 1 + z^2 / n
+  ctr <- p + z^2 / (2 * n)
+  hw  <- z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2))
+  list(100 * (ctr - hw) / den, 100 * (ctr + hw) / den)
 }
