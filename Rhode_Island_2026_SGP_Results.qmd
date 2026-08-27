@@ -653,7 +653,8 @@ ggplot(tr, aes(x = YEAR_LABEL, y = mean_baseline, color = GRADE, group = GRADE))
   scale_color_brewer(palette = "Dark2", name = "Grade") +
   labs(x = NULL, y = "Mean baseline SGP",
        title = "Baseline-referenced growth by grade, over time",
-       subtitle = "Same grade, successive cohorts, baseline-referenced. Read on its own this looks like a mathematics problem. The next slides show why it is not.") +
+       subtitle = paste0("Same grade, successive cohorts, baseline-referenced.\n",
+                         "Read on its own this looks like a mathematics problem \u2014 the next slides show why it is not.")) +
   theme_ri(20) + theme(legend.position = "right")
 ```
 
@@ -799,7 +800,8 @@ ggplot(pl, aes(x = p_base, y = p_cur)) +
   labs(x = paste0("Percentile in the ", BNYL, " distribution"),
        y = paste0(AYL, " percentile"),
        title = paste0("Probability–probability plots: ", AYL, " against ", BNYL),
-       subtitle = "Above the diagonal = more students below that score than in the norm period, i.e. the distribution has moved down. Invariant to any monotone rescaling.") +
+       subtitle = paste0("Above the diagonal = more students below that score than in the norm period: the distribution has moved down.\n",
+                         "Invariant to any monotone rescaling of the reported scale.")) +
   theme_ri(17)
 ```
 
@@ -833,11 +835,14 @@ ggplot(sc, aes(x = prof_chg, y = mean_baseline, color = SUBJECT)) +
   geom_text(aes(label = GRADE), vjust = -1.15, size = 5.5, show.legend = FALSE) +
   scale_color_manual(values = c(ELA = COHORT_COL, Mathematics = "#7a5c33")) +
   scale_x_continuous(expand = expansion(mult = 0.12)) +
-  scale_y_continuous(expand = expansion(mult = 0.12)) +
+  ## Extra headroom: the point labels sit above their points, so the topmost
+  ## label needs more room than the symmetric expansion gives it.
+  scale_y_continuous(expand = expansion(mult = c(0.12, 0.22))) +
   labs(x = paste0("Change in % proficient since ", BNYL, " (percentage points)"),
        y = "Mean baseline SGP",
        title = "Naive status trend against baseline-referenced growth",
-       subtitle = "Points are grades. Agreement between the two suggests a real trend; disagreement is the diagnostic signature worth investigating.") +
+       subtitle = paste0("Points are grades. Agreement between the two suggests a real trend;\n",
+                         "disagreement is the diagnostic signature worth investigating.")) +
   theme_ri(19)
 ```
 
@@ -1218,7 +1223,8 @@ ggplot(ct, aes(x = xlab, y = rate, fill = aspiration)) +
                      limits = c(0, 100), expand = expansion(mult = c(0, 0.02))) +
   labs(x = "Grade (horizon to target)", y = "% attaining target",
        title = "Share of students on track to catch up / keep up",
-       subtitle = "Catch Up = students below proficient; Keep Up = students at/above. Bars show 95% Wilson intervals; N is printed in each bar.") +
+       subtitle = paste0("Catch Up = students below proficient; Keep Up = students at/above.\n",
+                         "Bars show 95% Wilson intervals; N is printed in each bar.")) +
   theme_ri(19)
 ```
 
