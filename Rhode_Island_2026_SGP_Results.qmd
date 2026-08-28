@@ -221,6 +221,27 @@ gof_grid <- function(figs, min_col = "300px", gap = "0.6em", class = NULL) {
 }
 ```
 
+## AI Contribution &amp; Authorship Statement
+
+These analyses and this presentation represent the work of the author with substantive and continuous assistance from AI-based systems (Anthropic's Claude), integrated natively into the analysis, revision, and preparation of this deck.
+
+::: {.key-insight}
+**The use of AI here is not incidental or peripheral &mdash; it is essential, embedded, and reflective of a methodological shift toward AI-native scholarship. This statement is offered in the spirit of methodological clarity and epistemic honesty.**
+:::
+
+- **Analytic extension:** The cross-sectional comparison added in this revision &mdash; the Mann&ndash;Whitney statistic and Ho's scale-invariant $V$, the PP curves, and status read against the norm period &mdash; was developed in human&ndash;AI collaboration, including the derivation that the cross-sectional comparison is the **zero-covariate case** of the baseline SGP, and the reading of the mathematics trend that follows from it.
+
+- **Verification of inputs:** Every figure and factual claim in the returned committee feedback was checked against the student-level file before being acted on. Claims that could not be verified from the data are deliberately **not asserted** anywhere in this deck, and are named as open questions instead.
+
+- **Computational modules:** AI contributed to the R summary pipeline and the quantities it now caches, to the `ggplot2` and PSTricks figures, and to the verification harness used to confirm the reported numbers and to check the rendered slides.
+
+- **Authorship &amp; responsibility:** The author retains full responsibility for all claims, analyses, and recommendations (ICMJE/AERA norms). AI is not listed as an author but its instrumental role is explicitly acknowledged.
+
+::: {.notes}
+Front-load this rather than burying it at the end. Two points are worth making out loud if anyone asks. First, the pipeline is what makes the disclosure checkable: every number in this deck regenerates from the cached summary, so an AI-assisted analysis is auditable in a way a hand-built deck is not. Second, verification runs in both directions &mdash; the committee's feedback was checked against the data before it was acted on, and two claims in it that the student-level file cannot confirm are flagged as open rather than asserted.
+:::
+
+
 ## Roadmap {.center}
 
 ::: {.visually-hidden}
