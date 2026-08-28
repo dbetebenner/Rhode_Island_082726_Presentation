@@ -55,7 +55,7 @@
 \rput[bl](6.40,4.33){\textsf{\small\textcolor{bodyGrey}{One marginal distribution}}}
 
 \rput[bl](11.00,4.58){\textsf{\bfseries\large C.\ \ Average over the cohort}}
-\rput[bl](11.00,4.33){\textsf{\small\textcolor{bodyGrey}{This is Ho's comparison}}}
+\rput[bl](11.00,4.33){\textsf{\small\textcolor{bodyGrey}{Ho's comparison: a probability--probability (PP) plot}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PANEL A -- the norm-period conditional distributions
@@ -153,11 +153,24 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The identity
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\psline[linecolor=borderGrey,linewidth=0.6pt](0.50,0.70)(14.30,0.70)
-\rput[l](0.50,0.36){\textsf{\normalsize
+\psline[linecolor=borderGrey,linewidth=0.6pt](0.50,0.80)(14.30,0.80)
+\rput[l](0.50,0.54){\textsf{\normalsize
   $\mathrm{E}\!\left[F_b(Y_c)\right]\ =\ \Pr\!\left(Y_b < Y_c\right)\ =\ \mathrm{AUC}$}}
-\rput[l](6.40,0.36){\textsf{\normalsize $V=\sqrt{2}\,\Phi^{-1}(\mathrm{AUC})$}}
-\rput[l](11.00,0.36){\textsf{\small\textcolor{bodyGrey}{A conditions on the prior. B and C do not.}}}
+\rput[l](6.40,0.54){\textsf{\normalsize $V=\sqrt{2}\,\Phi^{-1}(\mathrm{AUC})$}}
+\rput[l](11.00,0.54){\textsf{\small\textcolor{bodyGrey}{A conditions on the prior. B and C do not.}}}
+
+%% Notation key -- every symbol above is defined here, so the figure stands
+%% on its own if it is lifted out of the deck.
+\rput[l](0.50,0.28){\textsf{\scriptsize\textcolor{bodyGrey}{%
+  \textbf{Notation.}\quad
+  $x_i,\,y_i$: one student's prior and current score.\quad
+  $F_b$: the norm-period distribution function, so $F_b(y)$ is the share of norm-period students scoring below $y$;
+  $F_b(y \mid x)$ its conditional form, given prior score $x$.}}}
+\rput[l](0.50,0.08){\textsf{\scriptsize\textcolor{bodyGrey}{%
+  \hspace*{1.62em}%
+  $Y_b,\,Y_c$: scores drawn at random from the norm period and from the current year.\quad
+  $\mathrm{E}[\,\cdot\,]$: an average.\quad
+  $\Phi^{-1}$: the inverse standard normal distribution function.}}}
 
 \end{pspicture}
 \end{document}

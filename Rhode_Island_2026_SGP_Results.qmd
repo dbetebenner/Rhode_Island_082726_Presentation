@@ -44,6 +44,15 @@ format:
               text-transform: uppercase;
               opacity: 0.85;
             }
+            .notation-key {
+              font-size: 0.66em;
+              line-height: 1.55;
+              color: var(--color-secondary, #5c5c58);
+              margin-top: 0.55em;
+              padding-top: 0.4em;
+              border-top: 1px solid var(--color-border, #d8d8d4);
+            }
+            .notation-key .sym { color: #141410; font-weight: 600; }
             .tac-tag {
               display: inline-block;
               font-size: 0.62em;
@@ -677,11 +686,20 @@ The committee's remedy is to put it beside the **cross-sectional** comparison fr
 ::: {.theorem-box-title}
 The two are the same statistic, with and without conditioning
 :::
-Drop the prior-score conditioning from a baseline SGP and it becomes the percentile of a student's score in the norm-period **marginal** distribution. Averaged over the cohort, that is
+Drop the prior-score conditioning from a baseline SGP and it becomes the percentile of a student's score in the norm-period **marginal** distribution. Averaged over the cohort, that is the Mann&ndash;Whitney statistic behind Ho's scale-invariant $V$:
 
-$$E\left[F_b(Y_c)\right] = \Pr(Y_b < Y_c) = \mathrm{AUC}, \qquad V = \sqrt{2}\,\Phi^{-1}(\mathrm{AUC})$$
+$$\mathrm{E}\left[F_b(Y_c)\right] \;=\; \Pr\!\left(Y_b < Y_c\right) \;=\; \mathrm{AUC},
+\qquad V \;=\; \sqrt{2}\,\Phi^{-1}(\mathrm{AUC})$$
 
-the Mann&ndash;Whitney statistic behind Ho's scale-invariant $V$. The cross-sectional comparison is the **zero-covariate case** of the baseline SGP &mdash; not a rival method.
+::: {.notation-key}
+[$Y_b$, $Y_c$]{.sym} &mdash; scores drawn at random from the norm period (`r BNYL`) and from the current year (`r AYL`) &nbsp;&middot;&nbsp;
+[$F_b$]{.sym} &mdash; the norm-period distribution function, so $F_b(y)$ is the share of norm-period students scoring below $y$; $F_b(y \mid x)$ is its conditional form, given prior score $x$ &nbsp;&middot;&nbsp;
+[$\mathrm{E}[\,\cdot\,]$]{.sym} &mdash; an average, here over the current-year cohort &nbsp;&middot;&nbsp;
+[$\mathrm{AUC}$]{.sym} &mdash; that average, equivalently $\Pr(Y_b < Y_c)$ &nbsp;&middot;&nbsp;
+[$\Phi^{-1}$]{.sym} &mdash; the inverse standard normal distribution function
+:::
+
+So the cross-sectional comparison is the **zero-covariate case** of the baseline SGP &mdash; not a rival method.
 :::
 
 ::: {.notes}
