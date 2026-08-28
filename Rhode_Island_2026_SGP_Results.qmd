@@ -886,10 +886,13 @@ gof_grid(vapply(c("2022_2023","2023_2024","2024_2025","2025_2026"),
 ```{r gof-diagonal-ela8}
 #| output: asis
 gof_grid(c(
-  gof_figure("ELA", "6", "2023_2024", "baseline", caption = "Grade 6 &mdash; 2024"),
-  gof_figure("ELA", "7", "2024_2025", "baseline", caption = "Grade 7 &mdash; 2025"),
-  gof_figure("ELA", "8", "2025_2026", "baseline", caption = "Grade 8 &mdash; 2026")
-), min_col = "340px")
+  gof_figure("ELA", "6", "2023_2024", "baseline", caption = "Grade 6 &mdash; 2024",
+             max_height = "620px"),
+  gof_figure("ELA", "7", "2024_2025", "baseline", caption = "Grade 7 &mdash; 2025",
+             max_height = "620px"),
+  gof_figure("ELA", "8", "2025_2026", "baseline", caption = "Grade 8 &mdash; 2026",
+             max_height = "620px")
+), min_col = "280px", class = "gof-grid-short")
 ```
 
 ::: {.key-insight}

@@ -455,8 +455,25 @@ $presentation-heading-font-weight: 600;
 // ── Goodness-of-fit grids ───────────────────────────────────────
 // Portrait GoF SVGs (612×792 pt) blow past slide height when only one or two
 // panels share a row at full column width — cap height and center horizontally.
+// `min_col` on gof_grid is a *width* floor (CSS minmax); it cannot shrink
+// height. Use these classes (or gof_figure(max_height=...)) to leave room
+// for a .key-insight / notes block beneath the row.
 .reveal .gof-grid-compact figure img {
   max-height: 63vh;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+// 3-up row with a callout under it. Use slide-coordinate px (not vh):
+// Reveal scales the 1920×1080 slide, and vh is viewport-relative, so a
+// vh cap shrinks twice and the panels collapse to thumbnails. 620px is
+// just under the unconstrained 3-up height (~760px) and leaves room for
+// the heading + .key-insight on the 1080 canvas. Click-to-enlarge still
+// opens the full SVG.
+.reveal .gof-grid-short figure img {
+  max-height: 620px;
   width: auto;
   max-width: 100%;
   display: block;
