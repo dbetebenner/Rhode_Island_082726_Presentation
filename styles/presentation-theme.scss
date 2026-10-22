@@ -481,12 +481,17 @@ $presentation-heading-font-weight: 600;
 }
 
 // ── Figure zoom modal (click-to-enlarge) ────────────────────────
-.reveal figure img {
+.reveal .slides img:not(.no-modal) {
   cursor: pointer;
   transition: opacity 0.2s ease;
 
   &:hover {
     opacity: 0.85;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 4px;
   }
 }
 
@@ -515,7 +520,7 @@ $presentation-heading-font-weight: 600;
     animation: figureModalZoomIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     img {
-      height: 90vh;
+      height: 86vh;
       width: auto;
       max-width: 95vw;
       object-fit: contain;
@@ -528,14 +533,17 @@ $presentation-heading-font-weight: 600;
 
   .modal-close {
     position: absolute;
-    top: -40px;
-    right: 0;
-    font-size: 2rem;
+    top: 0.35rem;
+    right: 0.35rem;
+    width: 2.1rem;
+    height: 2.1rem;
+    font-size: 1.5rem;
     color: white;
-    background: none;
+    background: rgba(20, 20, 16, 0.7);
     border: none;
+    border-radius: 50%;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0;
     line-height: 1;
     transition: transform 0.2s ease;
     font-family: inherit;
@@ -554,12 +562,12 @@ $presentation-heading-font-weight: 600;
 
   .modal-caption {
     position: absolute;
-    bottom: -60px;
+    bottom: -2.4rem;
     left: 0;
     right: 0;
     text-align: center;
     color: white;
-    font-size: 0.55em;
+    font-size: 1.1rem;
     font-style: italic;
     padding: 0 2rem;
     line-height: 1.4;
@@ -610,7 +618,7 @@ $presentation-heading-font-weight: 600;
     animation: none !important;
   }
 
-  .reveal figure img {
+  .reveal .slides img {
     transition: none !important;
   }
 }
