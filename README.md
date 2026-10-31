@@ -1,5 +1,7 @@
 # Rhode Island 2026 SGP Analyses — RIDE TAC Presentation
 
+Part of Damian Betebenner's talks: <https://dbetebenner.github.io/talks/>
+
 A reveal.js (Quarto) presentation of Rhode Island's 2026 Student Growth
 Percentile (SGP) results — RICAS (ELA/Math, grades 4–8) and SAT (grade 11) —
 for the RIDE Technical Advisory Committee. Covers cohort- and baseline-referenced
