@@ -475,6 +475,7 @@ Generated from the data, so the flagged grades update automatically with a new r
 ## Growth distribution: Low / Typical / High
 
 ```{r level-distribution}
+#| fig-alt: "Stacked bar chart of the share of students at low, typical and high growth by grade, in panels for each subject and for cohort and baseline norms. Dashed lines mark one-third and two-thirds; cohort norms split about evenly, while baseline norms shift with recovery or drift."
 #| fig-width: 16
 #| fig-height: 6.2
 
@@ -668,6 +669,7 @@ The grade-7 and grade-8 cohorts (early-literacy grades during the pandemic) are 
 ## Trend: same grade over time (drift indicator)
 
 ```{r trend-samegrade}
+#| fig-alt: "Line chart of mean baseline SGP over time, one line per grade and one panel per subject. A dashed line at 50 marks the norm-period rate of learning."
 #| fig-width: 16
 #| fig-height: 6.2
 
@@ -755,6 +757,7 @@ The payoff is the division of labour. Conditioning buys removal of the largest s
 ## The same grades, measured both ways
 
 ```{r context-joint}
+#| fig-alt: "Line charts by grade over time comparing two measures against the same 2017–19 reference: where this year's score distribution sits in the norm-period distribution, and mean baseline SGP, in panels by subject. A dashed line marks 50."
 #| fig-width: 16
 #| fig-height: 6.4
 
@@ -822,6 +825,7 @@ This slide reverses the previous revision's emphasis, and say so out loud. Last 
 ## The distributional comparison itself
 
 ```{r pp-plot}
+#| fig-alt: "Probability–probability plots, one panel per subject and grade, of this year's score percentiles against the norm-period distribution, with a dashed diagonal. A curve above the diagonal means the distribution has moved down."
 #| fig-width: 16
 #| fig-height: 5.9
 
@@ -856,6 +860,7 @@ This is the display the committee asked for, and its value is that it makes no d
 ## Do the two measurements agree?
 
 ```{r prof-scatter}
+#| fig-alt: "Scatter plot with one labeled point per grade and subject: change in percent proficient since the norm period on the horizontal axis against mean baseline SGP on the vertical axis, with dashed reference lines at zero change and at 50."
 #| fig-width: 15
 #| fig-height: 6.0
 
@@ -989,6 +994,7 @@ This is the committee's triangulation principle applied to the case where it bit
 ## The shape of the grade-11 distribution
 
 ```{r sat-distribution}
+#| fig-alt: "Bar charts of the full grade-11 growth percentile distribution by decile, in panels for each subject and norm. A dashed line marks the 10% each decile holds in the reference population."
 #| fig-width: 16
 #| fig-height: 5.8
 
@@ -1113,6 +1119,7 @@ Standard deviations are new this revision. The committee expected the spread to 
 ## Equity gaps at a glance
 
 ```{r equity-plot}
+#| fig-alt: "Horizontal bar chart of mean SGP for each student group, RICAS ELA and mathematics pooled, with cohort and baseline bars side by side and one panel per demographic dimension. A dashed line marks 50."
 #| fig-width: 16
 #| fig-height: 6.0
 
@@ -1242,6 +1249,7 @@ The committee asked that the target be made explicit, on the grounds that leavin
 ## Catch-up / keep-up attainment (RICAS, `r AYL`)
 
 ```{r targets-plot}
+#| fig-alt: "Bar chart of the percentage of students on track to catch up or keep up, by grade and horizon to target, one panel per subject. Bars show 95% intervals and the number of students."
 #| fig-width: 16
 #| fig-height: 5.9
 
